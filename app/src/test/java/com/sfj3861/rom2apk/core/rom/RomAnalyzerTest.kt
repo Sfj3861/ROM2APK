@@ -6,8 +6,9 @@ import java.io.ByteArrayInputStream
 
 class RomAnalyzerTest {
     @Test fun recognizesNesHeader() {
-        val bytes = ByteArray(32)
+        val bytes = ByteArray(16 + 16_384)
         bytes[0] = 0x4E; bytes[1] = 0x45; bytes[2] = 0x53; bytes[3] = 0x1A
+        bytes[4] = 1
         assertEquals(RomCheckStatus.VALIDATED,
             RomAnalyzer.analyze(RomFormat.NES, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
     }
