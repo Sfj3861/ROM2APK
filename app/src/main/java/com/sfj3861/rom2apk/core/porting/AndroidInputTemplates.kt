@@ -253,12 +253,12 @@ internal object AndroidInputTemplates {
                 KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_S -> GameAction.DOWN
                 KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_A -> GameAction.LEFT
                 KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_D -> GameAction.RIGHT
-                KeyEvent.KEYCODE_X -> GameAction.A
-                KeyEvent.KEYCODE_Z -> GameAction.B
-                KeyEvent.KEYCODE_S, KeyEvent.KEYCODE_C -> GameAction.X
-                KeyEvent.KEYCODE_A, KeyEvent.KEYCODE_V -> GameAction.Y
+                KeyEvent.KEYCODE_X, KeyEvent.KEYCODE_BUTTON_A -> GameAction.A
+                KeyEvent.KEYCODE_Z, KeyEvent.KEYCODE_BUTTON_B -> GameAction.B
+                KeyEvent.KEYCODE_C, KeyEvent.KEYCODE_BUTTON_X -> GameAction.X
+                KeyEvent.KEYCODE_V, KeyEvent.KEYCODE_BUTTON_Y -> GameAction.Y
                 KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER, KeyEvent.KEYCODE_BUTTON_START -> GameAction.START
-                KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.KEYCODE_SHIFT_RIGHT, KeyEvent.KEYCODE_BACK -> GameAction.SELECT
+                KeyEvent.KEYCODE_SHIFT_LEFT, KeyEvent.KEYCODE_SHIFT_RIGHT, KeyEvent.KEYCODE_BUTTON_SELECT -> GameAction.SELECT
                 KeyEvent.KEYCODE_Q, KeyEvent.KEYCODE_BUTTON_L1 -> GameAction.L
                 KeyEvent.KEYCODE_E, KeyEvent.KEYCODE_BUTTON_R1 -> GameAction.R
                 else -> null
