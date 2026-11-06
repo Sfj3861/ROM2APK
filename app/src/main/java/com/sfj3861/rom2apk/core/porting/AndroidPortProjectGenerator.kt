@@ -29,16 +29,17 @@ object AndroidPortProjectGenerator {
         files["app/build.gradle.kts"] = appBuildGradle(request)
         files["app/src/main/AndroidManifest.xml"] = manifest(request)
         files["app/src/main/res/values/strings.xml"] = strings(request)
-        files[PORT_INTERFACE_PATH] = generatedPortContract()
-        files["app/src/main/java/generated/port/GeneratedPortActivity.kt"] = generatedActivity()
+        files[PORT_INTERFACE_PATH] = AndroidInputTemplates.gamePortSource()
+        files["app/src/main/java/generated/port/VirtualControlsView.kt"] =
+            AndroidInputTemplates.controlsViewSource()
+        files["app/src/main/java/generated/port/GeneratedPortActivity.kt"] =
+            AndroidInputTemplates.activitySource()
         files["README-PORT.md"] = readme(request, translation)
 
         translation.sourceFiles.forEach { source ->
             require(isSafeRelativePath(source.path)) { "Ruta de fuente no permitida: ${source.path}" }
-            require(source.path.endsWith(".kt") || source.path.endsWith(".java") ||
-                source.path.endsWith(".c") || source.path.endsWith(".cpp") ||
-                source.path.endsWith(".h") || source.path.endsWith(".hpp")) {
-                "Tipo de fuente no permitido: ${source.path}"
+            require(source.path.endsWith(".kt") || source.path.endsWith(".java")) {
+                "El generador actual compila fuentes Kotlin/Java. El backend debe emitir una de ellas: ${source.path}"
             }
             require(source.path !in files) { "El backend intenta sobrescribir un archivo reservado: ${source.path}" }
             files[source.path] = source.content
@@ -203,6 +204,10 @@ object AndroidPortProjectGenerator {
         This project contains generated native source code, not a bundled console emulator.
         The backend must provide GeneratedGameImplementation and all required platform-native
         source files before the Android project can compile.
+
+        On-screen multi-touch controls and keyboard/gamepad shortcuts feed the same GameAction set:
+        arrows/WASD, X/Z/C/V, Enter, Shift, Q and E. The port backend receives onInputChanged;
+        it implements game logic and rendering, not an emulator.
 
         Build with JDK 17, Android SDK 36 and Gradle 8.13:
         gradle :app:assembleRelease
