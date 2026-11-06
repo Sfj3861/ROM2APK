@@ -60,6 +60,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sfj3861.rom2apk.core.rom.ImportedRom
 import com.sfj3861.rom2apk.core.rom.RomFormat
+import com.sfj3861.rom2apk.core.rom.RomAnalyzer
+import com.sfj3861.rom2apk.core.rom.RomAnalysis
+import com.sfj3861.rom2apk.core.rom.RomCheckStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 private enum class ExportMode(val title: String, val subtitle: String) {
@@ -79,8 +85,12 @@ class MainActivity : ComponentActivity() {
 private fun Rom2ApkApp() {
     val context = LocalContext.current
     var importedRom by remember { mutableStateOf<ImportedRom?>(null) }
+    var importedUri by remember { mutableStateOf<Uri?>(null) }
+    var analysis by remember { mutableStateOf<RomAnalysis?>(null) }
+    var isAnalyzing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var exportMode by remember { mutableStateOf(ExportMode.SINGLE) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     val picker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -95,6 +105,8 @@ private fun Rom2ApkApp() {
         val format = RomFormat.fromFileName(fileName)
         if (format == null) {
             importedRom = null
+            importedUri = null
+            analysis = null
             errorMessage = "Formato no reconocido. Revisa la extensión del archivo."
             return@rememberLauncherForActivityResult
         }
@@ -105,6 +117,8 @@ private fun Rom2ApkApp() {
                 if (cursor.isNull(index)) null else cursor.getLong(index)
             } else null
         }
+        importedUri = uri
+        analysis = null
         importedRom = ImportedRom(
             displayName = fileName.substringBeforeLast('.', fileName),
             fileName = fileName,
@@ -175,7 +189,39 @@ private fun Rom2ApkApp() {
                             )
                         )
                     },
-                    onClear = { importedRom = null; errorMessage = null }
+                    onClear = {
+                        importedRom = null
+                        importedUri = null
+                        analysis = null
+                        errorMessage = null
+                    },
+                    onAnalyze = {
+                        val selectedRom = importedRom
+                        val selectedUri = importedUri
+                        if (selectedRom != null && selectedUri != null && !isAnalyzing) {
+                            isAnalyzing = true
+                            analysis = null
+                            scope.launch {
+                                val result = withContext(Dispatchers.IO) {
+                                    runCatching {
+                                        val stream = context.contentResolver.openInputStream(selectedUri)
+                                            ?: error("Android no pudo abrir el archivo seleccionado.")
+                                        RomAnalyzer.analyze(selectedRom.format, stream, selectedRom.sizeBytes)
+                                    }.getOrElse {
+                                        RomAnalysis(
+                                            RomCheckStatus.INVALID,
+                                            "No se pudo analizar",
+                                            it.message ?: "Error de lectura del archivo."
+                                        )
+                                    }
+                                }
+                                analysis = result
+                                isAnalyzing = false
+                            }
+                        }
+                    },
+                    isAnalyzing = isAnalyzing,
+                    analysis = analysis
                 )
                 ExportModeCard(
                     selected = exportMode,
@@ -213,7 +259,10 @@ private fun ImportCard(
     importedRom: ImportedRom?,
     errorMessage: String?,
     onPick: () -> Unit,
-    onClear: () -> Unit
+    onClear: () -> Unit,
+    onAnalyze: () -> Unit,
+    isAnalyzing: Boolean,
+    analysis: RomAnalysis?
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -284,6 +333,36 @@ private fun ImportCard(
                 Text("Formato detectado: .${importedRom.format.extension.uppercase(Locale.ROOT)}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary)
+                Button(
+                    onClick = onAnalyze,
+                    enabled = !isAnalyzing,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (isAnalyzing) "Analizando archivo…" else "Analizar contenido")
+                }
+                if (analysis != null) {
+                    val statusColor = when (analysis.status) {
+                        RomCheckStatus.VALIDATED -> Color(0xFF23864A)
+                        RomCheckStatus.NEEDS_SPECIAL_HANDLING -> MaterialTheme.colorScheme.primary
+                        RomCheckStatus.INCONCLUSIVE -> Color(0xFFB7791F)
+                        RomCheckStatus.INVALID -> MaterialTheme.colorScheme.error
+                    }
+                    Surface(
+                        color = statusColor.copy(alpha = 0.09f),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text(analysis.title, fontWeight = FontWeight.SemiBold, color = statusColor)
+                            Text(analysis.details, style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "La validación estructural no garantiza que el juego sea ejecutable.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
             if (errorMessage != null) {
                 Text(errorMessage, color = MaterialTheme.colorScheme.error,

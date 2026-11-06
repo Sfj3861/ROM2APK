@@ -17,7 +17,7 @@ ROM2APK is an Android application project for packaging supported game files int
 
 - Native Android app using Kotlin and Jetpack Compose.
 - Android Storage Access Framework document picker (no broad storage permission).
-- Extension identification for the ten requested suffixes.
+- Extension identification for the ten requested suffixes.\n- Conservative header/content checks for supported formats.\n- Asynchronous analysis with validated, invalid, inconclusive, and special-handling outcomes.
 - Explicit distinction between 3DS cartridge images, 3DSX homebrew executables, and CIA packages.
 - Export mode selection UI (standalone APK / multi-game library).
 - Accessible labels, empty states, and a responsive single-screen layout.
