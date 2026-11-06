@@ -19,7 +19,7 @@ class AndroidPortProjectGeneratorTest {
         sourceFiles = listOf(
             PortSourceFile(
                 "app/src/main/java/generated/port/GeneratedGameImplementation.kt",
-                "package generated.port\nclass GeneratedGameImplementation : GeneratedGamePort {\n override val title = \"Test\"\n override fun createSession() = object : GeneratedGameSession { override fun onCreate() {} ; override fun onPause() {} ; override fun onResume() {} ; override fun onDestroy() {} }\n}"
+                "package generated.port\nimport android.app.Activity\nimport android.view.View\nimport android.widget.FrameLayout\nclass GeneratedGameImplementation : GeneratedGamePort {\n override val title = \"Test\"\n override fun createSession(activity: Activity) = object : GeneratedGameSession { override val view: View = FrameLayout(activity); override fun onCreate() {} ; override fun onPause() {} ; override fun onResume() {} ; override fun onDestroy() {} ; override fun onInputChanged(pressed: Set<GameAction>) {} }\n}"
             )
         )
     )
@@ -38,6 +38,11 @@ class AndroidPortProjectGeneratorTest {
         assertTrue("app/build.gradle.kts" in entries)
         assertTrue("app/src/main/AndroidManifest.xml" in entries)
         assertTrue("app/src/main/java/generated/port/GeneratedGameImplementation.kt" in entries)
+        assertTrue("app/src/main/java/generated/port/VirtualControlsView.kt" in entries)
+        assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("onKeyDown"))
+        assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("KEYCODE_DPAD_UP"))
+        assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("onInputChanged"))
+        assertTrue(entries.getValue("app/src/main/java/generated/port/VirtualControlsView.kt").contains("ACTION_POINTER_DOWN"))
         assertFalse(entries.keys.any { it.endsWith(".nes") || it.endsWith(".gba") })
         assertTrue(entries.getValue("README-PORT.md").contains("not a bundled console emulator"))
     }
