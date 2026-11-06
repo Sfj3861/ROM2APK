@@ -21,7 +21,7 @@ ROM2APK is an Android application project for packaging supported game files int
 - Conservative header/content checks for supported formats.
 - Asynchronous analysis with validated, invalid, inconclusive, and special-handling outcomes.
 - Explicit distinction between 3DS cartridge images, 3DSX homebrew executables, and CIA packages.
-- Export mode selection UI (standalone APK / multi-game library).
+- Functional export-mode selection UI (standalone APK / multi-game library); actual package generation is not yet implemented.
 - Accessible labels, empty states, and a responsive single-screen layout.
 
 ## Build

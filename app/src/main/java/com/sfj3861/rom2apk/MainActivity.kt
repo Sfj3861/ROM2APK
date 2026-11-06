@@ -354,7 +354,9 @@ private fun ImportCard(
                     ) {
                         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text(analysis.title, fontWeight = FontWeight.SemiBold, color = statusColor)
+                            Text("Código: ${analysis.diagnosticCode}", style = MaterialTheme.typography.labelSmall, color = statusColor)
                             Text(analysis.details, style = MaterialTheme.typography.bodySmall)
+                            Text("Siguiente paso: ${analysis.recommendation}", style = MaterialTheme.typography.bodySmall)
                             Text(
                                 "La validación estructural no garantiza que el juego sea ejecutable.",
                                 style = MaterialTheme.typography.labelSmall,
@@ -431,8 +433,8 @@ private fun BuildStatusCard(hasRom: Boolean, mode: ExportMode) {
                     fontWeight = FontWeight.SemiBold)
             }
             Text(
-                if (hasRom) "Archivo importado. El análisis avanzado y el generador APK están en desarrollo."
-                else "Selecciona un archivo para comenzar. El generador APK se incorporará en una siguiente fase.",
+                if (hasRom) "Archivo importado. Puedes analizar su estructura; la generación de APK todavía no está disponible."
+                else "Importa una ROM para analizarla. La exportación real se habilitará cuando el motor y el empaquetador estén integrados.",
                 style = MaterialTheme.typography.bodyMedium
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

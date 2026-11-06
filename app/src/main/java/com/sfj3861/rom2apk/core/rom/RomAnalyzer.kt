@@ -127,8 +127,8 @@ object RomAnalyzer {
     private fun ascii(data: ByteArray, offset: Int, length: Int) =
         if (offset + length > data.size) "" else String(data, offset, length, Charsets.US_ASCII)
 
-    private fun validated(details: String) = RomAnalysis(RomCheckStatus.VALIDATED, "Cabecera reconocida", details)
-    private fun special(details: String) = RomAnalysis(RomCheckStatus.NEEDS_SPECIAL_HANDLING, "Requiere comprobaciones adicionales", details)
-    private fun inconclusive(details: String) = RomAnalysis(RomCheckStatus.INCONCLUSIVE, "No concluyente", details)
-    private fun invalid(details: String) = RomAnalysis(RomCheckStatus.INVALID, "Archivo no válido", details)
+    private fun validated(details: String) = RomAnalysis(RomCheckStatus.VALIDATED, "Cabecera reconocida", details, "ROM-HEADER-OK", "Continúa con las comprobaciones del motor; esto no garantiza compatibilidad.")
+    private fun special(details: String) = RomAnalysis(RomCheckStatus.NEEDS_SPECIAL_HANDLING, "Requiere comprobaciones adicionales", details, "ROM-SPECIAL", "Consulta los requisitos específicos del sistema y del motor antes de exportar.")
+    private fun inconclusive(details: String) = RomAnalysis(RomCheckStatus.INCONCLUSIVE, "No concluyente", details, "ROM-INCONCLUSIVE", "Revisa el volcado y las cabeceras alternativas; no descartes el archivo solo por este resultado.")
+    private fun invalid(details: String) = RomAnalysis(RomCheckStatus.INVALID, "Archivo no válido", details, "ROM-INVALID", "Comprueba que el archivo esté completo y selecciona una copia legítima sin daños.")
 }
