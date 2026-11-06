@@ -38,14 +38,14 @@ class RomAnalyzerTest {
 
     @Test fun validatesGameBoyHeaderChecksum() {
         val bytes = ByteArray(0x150)
-        bytes[0x14D] = 0
+        bytes[0x14D] = 0xE7.toByte()
         assertEquals(RomCheckStatus.VALIDATED, RomAnalyzer.analyze(RomFormat.GB, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
     }
 
     @Test fun validatesGbaHeaderChecksumAndFixedByte() {
         val bytes = ByteArray(0xC0)
         bytes[0xB2] = 0x96.toByte()
-        bytes[0xBD] = 0xE7.toByte()
+        bytes[0xBD] = 0x51.toByte()
         assertEquals(RomCheckStatus.VALIDATED, RomAnalyzer.analyze(RomFormat.GBA, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
     }
 
