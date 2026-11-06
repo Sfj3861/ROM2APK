@@ -60,6 +60,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sfj3861.rom2apk.core.rom.ImportedRom
 import com.sfj3861.rom2apk.core.rom.RomFormat
+import com.sfj3861.rom2apk.core.rom.LibraryRom
+import com.sfj3861.rom2apk.core.rom.RomLibraryStore
 import com.sfj3861.rom2apk.core.rom.RomAnalyzer
 import com.sfj3861.rom2apk.core.rom.RomAnalysis
 import com.sfj3861.rom2apk.core.rom.RomCheckStatus
@@ -90,12 +92,14 @@ private fun Rom2ApkApp() {
     var isAnalyzing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var exportMode by remember { mutableStateOf(ExportMode.SINGLE) }
+    var library by remember { mutableStateOf(RomLibraryStore.load(context)) }
     val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     val picker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri == null) return@rememberLauncherForActivityResult
+        runCatching { context.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         val resolver = context.contentResolver
         val fileName = resolver.query(uri, null, null, null, null)?.use { cursor ->
             val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -221,7 +225,24 @@ private fun Rom2ApkApp() {
                         }
                     },
                     isAnalyzing = isAnalyzing,
-                    analysis = analysis
+                    analysis = analysis,
+                    onAddToLibrary = {
+                        val rom = importedRom
+                        val uri = importedUri
+                        if (rom != null && uri != null) {
+                            RomLibraryStore.add(context, LibraryRom(uri.toString(), rom.displayName, rom.fileName, rom.sizeBytes, rom.format))
+                            library = RomLibraryStore.load(context)
+                        }
+                    },
+                    isInLibrary = importedUri?.toString()?.let { selected -> library.any { it.uri == selected } } == true
+                )
+                LibraryCard(
+                    entries = library,
+                    onRemove = { entry ->
+                        RomLibraryStore.remove(context, entry.uri)
+                        runCatching { context.contentResolver.releasePersistableUriPermission(uriFromString(entry.uri), android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+                        library = RomLibraryStore.load(context)
+                    }
                 )
                 ExportModeCard(
                     selected = exportMode,
@@ -262,7 +283,9 @@ private fun ImportCard(
     onClear: () -> Unit,
     onAnalyze: () -> Unit,
     isAnalyzing: Boolean,
-    analysis: RomAnalysis?
+    analysis: RomAnalysis?,
+    onAddToLibrary: () -> Unit,
+    isInLibrary: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -333,6 +356,10 @@ private fun ImportCard(
                 Text("Formato detectado: .${importedRom.format.extension.uppercase(Locale.ROOT)}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary)
+                OutlinedButton(onClick = onAddToLibrary, enabled = !isInLibrary, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.LibraryBooks, contentDescription = null)
+                    Text(if (isInLibrary) "Guardado en la biblioteca" else "Añadir a la biblioteca")
+                }
                 Button(
                     onClick = onAnalyze,
                     enabled = !isAnalyzing,
@@ -373,6 +400,42 @@ private fun ImportCard(
         }
     }
 }
+
+@Composable
+private fun LibraryCard(entries: List<LibraryRom>, onRemove: (LibraryRom) -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.LibraryBooks, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Text("  Mi biblioteca", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                Text(entries.size.toString(), style = MaterialTheme.typography.labelMedium)
+            }
+            if (entries.isEmpty()) {
+                Text("Los juegos que añadas aparecerán aquí. Se guarda la referencia al archivo, no se duplica la ROM.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                entries.forEachIndexed { index, entry ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(entry.displayName, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text("${entry.format.extension.uppercase(Locale.ROOT)} · ${entry.sizeBytes?.let(::formatBytes) ?: "Tamaño desconocido"}",
+                                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        OutlinedButton(onClick = { onRemove(entry) }) { Text("Quitar") }
+                    }
+                    if (index != entries.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+            }
+        }
+    }
+}
+
+private fun uriFromString(value: String): Uri = Uri.parse(value)
 
 @Composable
 private fun ExportModeCard(selected: ExportMode, onSelect: (ExportMode) -> Unit) {
