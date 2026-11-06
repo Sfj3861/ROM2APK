@@ -65,10 +65,13 @@ internal object AndroidInputTemplates {
             private var buttonRadius = 0f
             private var selectRect = RectF()
             private var startRect = RectF()
+            private var lRect = RectF()
+            private var rRect = RectF()
+            private val capturedPointers = mutableSetOf<Int>()
 
             init {
                 isClickable = true
-                contentDescription = "Controles táctiles: cruceta, A, B, X, Y, Select y Start"
+                contentDescription = "Controles táctiles: cruceta, A, B, X, Y, L, R, Select y Start"
             }
 
             private val activeActions: Set<GameAction>
@@ -90,6 +93,9 @@ internal object AndroidInputTemplates {
                 val smallH = unit * 0.045f
                 selectRect = RectF(w * 0.43f, h * 0.90f, w * 0.43f + smallW, h * 0.90f + smallH)
                 startRect = RectF(w * 0.55f, h * 0.90f, w * 0.55f + smallW, h * 0.90f + smallH)
+                val shoulderRadius = unit * 0.045f
+                lRect = circleRect(w * 0.13f, h * 0.20f, shoulderRadius)
+                rRect = circleRect(w * 0.87f, h * 0.20f, shoulderRadius)
             }
 
             override fun onDraw(canvas: Canvas) {
@@ -101,6 +107,8 @@ internal object AndroidInputTemplates {
                 drawButton(canvas, GameAction.Y, "Y")
                 drawPill(canvas, GameAction.SELECT, selectRect, "SEL")
                 drawPill(canvas, GameAction.START, startRect, "START")
+                drawPill(canvas, GameAction.L, lRect, "L")
+                drawPill(canvas, GameAction.R, rRect, "R")
             }
 
             private fun drawDpad(canvas: Canvas) {
@@ -147,6 +155,8 @@ internal object AndroidInputTemplates {
             private fun actionAt(x: Float, y: Float): GameAction? {
                 if (selectRect.contains(x, y)) return GameAction.SELECT
                 if (startRect.contains(x, y)) return GameAction.START
+                if (lRect.contains(x, y)) return GameAction.L
+                if (rRect.contains(x, y)) return GameAction.R
                 buttonRects.forEach { (action, rect) ->
                     if (hypot((x - rect.centerX()).toDouble(), (y - rect.centerY()).toDouble()) <= buttonRadius) return action
                 }
@@ -164,28 +174,40 @@ internal object AndroidInputTemplates {
                     MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                         val index = event.actionIndex
                         val id = event.getPointerId(index)
-                        actionAt(event.getX(index), event.getY(index))?.let { pointerActions[id] = it }
+                        val action = actionAt(event.getX(index), event.getY(index))
+                        if (event.actionMasked == MotionEvent.ACTION_DOWN && action == null) {
+                            // Let the game surface receive ordinary touchscreen input.
+                            return false
+                        }
+                        if (action != null) {
+                            capturedPointers.add(id)
+                            pointerActions[id] = action
+                        }
                         publish()
                     }
                     MotionEvent.ACTION_MOVE -> {
                         for (index in 0 until event.pointerCount) {
                             val id = event.getPointerId(index)
+                            if (id !in capturedPointers) continue
                             val action = actionAt(event.getX(index), event.getY(index))
                             if (action == null) pointerActions.remove(id) else pointerActions[id] = action
                         }
                         publish()
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                        pointerActions.remove(event.getPointerId(event.actionIndex))
+                        val id = event.getPointerId(event.actionIndex)
+                        capturedPointers.remove(id)
+                        pointerActions.remove(id)
                         publish()
                     }
                     MotionEvent.ACTION_CANCEL -> {
+                        capturedPointers.clear()
                         pointerActions.clear()
                         publish()
                     }
                 }
                 invalidate()
-                return true
+                return capturedPointers.isNotEmpty() || event.actionMasked == MotionEvent.ACTION_CANCEL
             }
 
             private fun publish() = onActionsChanged(activeActions)
@@ -234,16 +256,13 @@ internal object AndroidInputTemplates {
                 gameSession.onCreate()
             }
 
-            override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-                val action = keyToAction(keyCode) ?: return super.onKeyDown(keyCode, event)
-                keyboardActions.add(action)
-                dispatchCombinedInput()
-                return true
-            }
-
-            override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-                val action = keyToAction(keyCode) ?: return super.onKeyUp(keyCode, event)
-                keyboardActions.remove(action)
+            override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+                val action = keyToAction(event.keyCode) ?: return super.dispatchKeyEvent(event)
+                when (event.action) {
+                    KeyEvent.ACTION_DOWN -> keyboardActions.add(action)
+                    KeyEvent.ACTION_UP -> keyboardActions.remove(action)
+                    else -> return true
+                }
                 dispatchCombinedInput()
                 return true
             }
