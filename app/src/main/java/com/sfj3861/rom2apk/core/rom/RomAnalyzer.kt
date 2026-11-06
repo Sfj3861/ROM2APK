@@ -47,7 +47,15 @@ object RomAnalyzer {
         if (!matches(data, 0, byteArrayOf(0x4E, 0x45, 0x53, 0x1A))) return invalid("No se encontró la firma iNES/NES 2.0.")
         val trainerBytes = if (u8(data, 6) and 0x04 != 0) 512L else 0L
         if (size <= 16L + trainerBytes) return invalid("La imagen no contiene datos de juego después de la cabecera.")
-        return validated("Cabecera iNES/NES 2.0 reconocida. La identificación del mapper y la prueba de ejecución quedan pendientes.")
+        val isNes2 = (u8(data, 7) and 0x0C) == 0x08
+        if (!isNes2) {
+            val prgBanks = u8(data, 4)
+            val chrBanks = u8(data, 5)
+            if (prgBanks == 0) return invalid("La cabecera iNES declara cero bancos PRG.")
+            val declaredMinimum = 16L + trainerBytes + prgBanks * 16_384L + chrBanks * 8_192L
+            if (size < declaredMinimum) return invalid("El archivo está truncado: su tamaño es inferior al declarado en la cabecera iNES.")
+        }
+        return validated("Cabecera iNES/NES 2.0 reconocida. La identificación completa del mapper y la prueba de ejecución quedan pendientes.")
     }
 
     private fun checkSnes(data: ByteArray, size: Long): RomAnalysis {
