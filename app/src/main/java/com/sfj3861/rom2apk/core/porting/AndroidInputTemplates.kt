@@ -266,8 +266,8 @@ internal object AndroidInputTemplates {
             override fun dispatchKeyEvent(event: KeyEvent): Boolean {
                 val action = keyToAction(event.keyCode) ?: return super.dispatchKeyEvent(event)
                 when (event.action) {
-                    KeyEvent.ACTION_DOWN -> keyboardKeys[keyCodeOr(event)] = action
-                    KeyEvent.ACTION_UP -> keyboardKeys.remove(keyCodeOr(event))
+                    KeyEvent.ACTION_DOWN -> keyboardKeys[event.keyCode] = action
+                    KeyEvent.ACTION_UP -> keyboardKeys.remove(event.keyCode)
                     else -> return true
                 }
                 dispatchCombinedInput()
@@ -293,8 +293,6 @@ internal object AndroidInputTemplates {
             private fun dispatchCombinedInput() {
                 session?.onInputChanged((keyboardKeys.values + touchActions).toSet())
             }
-
-            private fun keyCodeOr(event: KeyEvent): Int = event.keyCode
 
             override fun onPause() {
                 keyboardKeys.clear()
