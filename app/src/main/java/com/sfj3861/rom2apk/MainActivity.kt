@@ -401,7 +401,7 @@ private fun ExportModeCard(selected: ExportMode, onSelect: (ExportMode) -> Unit)
                     )
                     Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
                         Text(mode.title, fontWeight = FontWeight.SemiBold)
-                        Text(mode.subtitle, style = MaterialTheme.typography.bodySmall,
+                        Text(mode.subtitle + if (mode == ExportMode.SINGLE) " · Generador pendiente" else " · Gestor de biblioteca pendiente", style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     FilterChip(
@@ -439,7 +439,7 @@ private fun BuildStatusCard(hasRom: Boolean, mode: ExportMode) {
             Text("Modalidad: ${mode.title}",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary)
-            Text("La detección actual reconoce la extensión; todavía no valida el contenido interno.",
+            Text("La extensión identifica el formato esperado. El analizador realiza comprobaciones estructurales preliminares; no certifica que el juego funcione.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

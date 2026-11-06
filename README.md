@@ -2,7 +2,7 @@
 
 ROM2APK is an Android application project for packaging supported game files into standalone Android apps or multi-game library apps.
 
-> **Development status:** early foundation. The current code provides the Android shell, a clean Compose interface, document import, and extension-based format identification. It does not yet build or run game APKs.
+> **Development status:** early foundation. The current code provides the Android shell, a clean Compose interface, document import, and format identification, and preliminary structural analysis with diagnostics. It does not yet build or run game APKs.
 
 ## Product goals
 
