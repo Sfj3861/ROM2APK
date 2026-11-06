@@ -4,7 +4,13 @@ import java.io.InputStream
 
 enum class RomCheckStatus { VALIDATED, NEEDS_SPECIAL_HANDLING, INCONCLUSIVE, INVALID }
 
-data class RomAnalysis(\n    val status: RomCheckStatus,\n    val title: String,\n    val details: String,\n    val diagnosticCode: String = "ROM-GENERAL",\n    val recommendation: String = "Comprueba que el archivo está completo y vuelve a analizarlo."\n)
+data class RomAnalysis(
+    val status: RomCheckStatus,
+    val title: String,
+    val details: String,
+    val diagnosticCode: String = "ROM-GENERAL",
+    val recommendation: String = "Comprueba que el archivo está completo y vuelve a analizarlo."
+)
 
 /** Conservative structural checks; a plausible header does not guarantee runtime compatibility. */
 object RomAnalyzer {

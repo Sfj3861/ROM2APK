@@ -25,7 +25,17 @@ class RomAnalyzerTest {
             RomAnalyzer.analyze(RomFormat.THREE_DSX, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
     }
 
-    @Test fun invalidResultsIncludeDiagnosticAndRecommendation() {\n        val result = RomAnalyzer.analyze(RomFormat.NES, ByteArrayInputStream(ByteArray(64)), 64)\n        org.junit.Assert.assertTrue(result.diagnosticCode.isNotBlank())\n        org.junit.Assert.assertTrue(result.recommendation.isNotBlank())\n    }\n\n    @Test fun acceptsUppercaseFileExtensions() {\n        assertEquals(RomFormat.GBA, RomFormat.fromFileName("MY_GAME.GBA"))\n    }\n\n    @Test fun rejectsTruncatedGameBoyHeader() {
+    @Test fun invalidResultsIncludeDiagnosticAndRecommendation() {
+        val result = RomAnalyzer.analyze(RomFormat.NES, ByteArrayInputStream(ByteArray(64)), 64)
+        org.junit.Assert.assertTrue(result.diagnosticCode.isNotBlank())
+        org.junit.Assert.assertTrue(result.recommendation.isNotBlank())
+    }
+
+    @Test fun acceptsUppercaseFileExtensions() {
+        assertEquals(RomFormat.GBA, RomFormat.fromFileName("MY_GAME.GBA"))
+    }
+
+    @Test fun rejectsTruncatedGameBoyHeader() {
         val bytes = ByteArray(32)
         assertEquals(RomCheckStatus.INVALID,
             RomAnalyzer.analyze(RomFormat.GB, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
