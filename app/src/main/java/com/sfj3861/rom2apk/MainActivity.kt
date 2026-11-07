@@ -65,6 +65,9 @@ import com.sfj3861.rom2apk.core.rom.RomLibraryStore
 import com.sfj3861.rom2apk.core.rom.RomAnalyzer
 import com.sfj3861.rom2apk.core.rom.RomAnalysis
 import com.sfj3861.rom2apk.core.rom.RomCheckStatus
+import com.sfj3861.rom2apk.core.porting.NesNromPreflight
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -210,7 +213,12 @@ private fun Rom2ApkApp() {
                                     runCatching {
                                         val stream = context.contentResolver.openInputStream(selectedUri)
                                             ?: error("Android no pudo abrir el archivo seleccionado.")
-                                        RomAnalyzer.analyze(selectedRom.format, stream, selectedRom.sizeBytes)
+                                        if (selectedRom.format == RomFormat.NES) {
+                                            val bytes = stream.use { readBounded(it, 1024 * 1024) }
+                                            NesNromPreflight.analyze(bytes)
+                                        } else {
+                                            RomAnalyzer.analyze(selectedRom.format, stream, selectedRom.sizeBytes)
+                                        }
                                     }.getOrElse {
                                         RomAnalysis(
                                             RomCheckStatus.INVALID,
@@ -549,4 +557,24 @@ private fun formatBytes(bytes: Long): String = when {
     bytes < 1024 -> "$bytes B"
     bytes < 1024 * 1024 -> "${bytes / 1024.0} KB".format(Locale.ROOT)
     else -> "${bytes / (1024.0 * 1024.0)} MB".format(Locale.ROOT)
+}
+
+
+/** Reads at most maxBytes + 1 to reject oversized inputs without unbounded allocation. */
+private fun readBounded(input: InputStream, maxBytes: Int): ByteArray {
+    val output = ByteArrayOutputStream()
+    val buffer = ByteArray(8192)
+    while (true) {
+        val count = input.read(buffer)
+        if (count < 0) break
+        if (count == 0) {
+            val single = input.read()
+            if (single < 0) break
+            output.write(single)
+        } else {
+            output.write(buffer, 0, count)
+        }
+        require(output.size() <= maxBytes) { "El archivo supera el límite de análisis de 1 MiB." }
+    }
+    return output.toByteArray()
 }
