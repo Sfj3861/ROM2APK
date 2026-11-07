@@ -55,6 +55,9 @@ object Mos6502Disassembler {
             }
     }
 
+    /** Number of documented NMOS 6502 opcodes represented by this decoder. */
+    val supportedOpcodeCount: Int get() = definitions.size
+
     fun disassemble(
         bytes: ByteArray,
         startAddress: Int = 0x8000,
