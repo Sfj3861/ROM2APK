@@ -59,6 +59,18 @@ class AndroidPortProjectGeneratorTest {
         assertTrue(entries.getValue("README-PORT.md").contains("not a bundled console emulator"))
     }
 
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsBackendWithoutGeneratedGameEntrypoint() {
+        AndroidPortProjectGenerator.generate(
+            request,
+            translation.copy(sourceFiles = listOf(PortSourceFile(
+                "app/src/main/java/com/example/portedgame/Other.kt",
+                "package generated.port\\nclass NotTheEntrypoint"
+            )))
+        )
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsPathTraversalFromBackend() {
         AndroidPortProjectGenerator.generate(
