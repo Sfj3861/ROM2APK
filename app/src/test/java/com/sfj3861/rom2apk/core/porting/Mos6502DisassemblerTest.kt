@@ -56,6 +56,19 @@ class Mos6502DisassemblerTest {
         assertTrue(result.single().isKnownOpcode)
     }
 
+
+    @Test
+    fun treatsBrkPaddingByteAsPartOfInstructionLength() {
+        val result = Mos6502Disassembler.disassemble(
+            byteArrayOf(0x00, 0xEA.toByte(), 0xEA.toByte()),
+            startAddress = 0x8000
+        )
+        assertEquals(2, result.size)
+        assertEquals(2, result[0].bytes.size)
+        assertEquals(0x8002, result[0].nextAddress)
+        assertEquals("NOP", result[1].mnemonic)
+    }
+
     @Test
     fun supportsInstructionLimitAndAddressWrapping() {
         val result = Mos6502Disassembler.disassemble(
