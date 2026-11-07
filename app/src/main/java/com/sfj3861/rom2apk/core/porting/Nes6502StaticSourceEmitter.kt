@@ -32,14 +32,14 @@ object Nes6502StaticSourceEmitter {
         val instructions = analysis.instructions.associateBy { it.address }
         val diagnostics = mutableListOf<String>()
         val supported = setOf(
-            "NOP", "LDA", "LDX", "LDY", "STA", "TAX", "TAY", "TXA", "TYA",
+            "NOP", "RTS", "LDA", "LDX", "LDY", "STA", "TAX", "TAY", "TXA", "TYA",
             "INX", "DEX", "INY", "DEY", "CLC", "SEC", "CLV",
             "BCC", "BCS", "BEQ", "BNE", "BMI", "BPL", "BVC", "BVS", "JMP"
         )
         for (instruction in analysis.instructions) {
             val mode = instruction.mode
             val supportedMode = when (instruction.mnemonic) {
-                "NOP", "TAX", "TAY", "TXA", "TYA", "INX", "DEX", "INY", "DEY", "CLC", "SEC", "CLV" ->
+                "NOP", "RTS", "TAX", "TAY", "TXA", "TYA", "INX", "DEX", "INY", "DEY", "CLC", "SEC", "CLV" ->
                     mode == Mos6502Disassembler.AddressMode.IMPLIED
                 "LDA", "LDX", "LDY" -> mode == Mos6502Disassembler.AddressMode.IMMEDIATE ||
                     mode == Mos6502Disassembler.AddressMode.ZERO_PAGE
