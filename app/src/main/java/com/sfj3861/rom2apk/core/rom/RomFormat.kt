@@ -1,5 +1,7 @@
 package com.sfj3861.rom2apk.core.rom
 
+import java.util.Locale
+
 enum class ConsoleFamily(val displayName: String) {
     NES("Nintendo Entertainment System"),
     SNES("Super Nintendo"),
@@ -30,7 +32,7 @@ enum class RomFormat(
     companion object {
         fun fromFileName(fileName: String): RomFormat? {
             val extension = fileName.substringAfterLast('.', missingDelimiterValue = "")
-                .lowercase()
+                .lowercase(Locale.ROOT)
             return entries.firstOrNull { it.extension == extension }
         }
     }
