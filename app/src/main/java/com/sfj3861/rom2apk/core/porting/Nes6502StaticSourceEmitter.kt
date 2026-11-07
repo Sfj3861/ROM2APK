@@ -32,14 +32,14 @@ object Nes6502StaticSourceEmitter {
         val instructions = analysis.instructions.associateBy { it.address }
         val diagnostics = mutableListOf<String>()
         val supported = setOf(
-            "NOP", "RTS", "LDA", "LDX", "LDY", "STA", "TAX", "TAY", "TXA", "TYA",
+            "NOP", "LDA", "LDX", "LDY", "STA", "TAX", "TAY", "TXA", "TYA",
             "INX", "DEX", "INY", "DEY", "CLC", "SEC", "CLV",
             "BCC", "BCS", "BEQ", "BNE", "BMI", "BPL", "BVC", "BVS", "JMP"
         )
         for (instruction in analysis.instructions) {
             val mode = instruction.mode
             val supportedMode = when (instruction.mnemonic) {
-                "NOP", "RTS", "TAX", "TAY", "TXA", "TYA", "INX", "DEX", "INY", "DEY", "CLC", "SEC", "CLV" ->
+                "NOP", "TAX", "TAY", "TXA", "TYA", "INX", "DEX", "INY", "DEY", "CLC", "SEC", "CLV" ->
                     mode == Mos6502Disassembler.AddressMode.IMPLIED
                 "LDA", "LDX", "LDY" -> mode == Mos6502Disassembler.AddressMode.IMMEDIATE ||
                     mode == Mos6502Disassembler.AddressMode.ZERO_PAGE
@@ -111,7 +111,6 @@ object Nes6502StaticSourceEmitter {
         val operand = i.bytes.getOrElse(1) { 0 }
         when (i.mnemonic) {
             "NOP" -> out.appendLine("                    state.pc = 0x${hexValue(next)}")
-            "RTS" -> out.appendLine("                    return state")
             "LDA", "LDX", "LDY" -> {
                 val value = if (i.mode == Mos6502Disassembler.AddressMode.IMMEDIATE)
                     "0x${hexValue(operand)}" else "(state.ram[0x${hexValue(operand)}].toInt() and 0xFF)"
