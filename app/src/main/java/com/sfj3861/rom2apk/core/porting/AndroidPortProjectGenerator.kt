@@ -20,7 +20,7 @@ object AndroidPortProjectGenerator {
         require(translation.sourceFiles.isNotEmpty()) { "El backend no ha generado código fuente." }
         val hasEntrypoint = translation.sourceFiles.any { source ->
             source.content.contains("package generated.port") &&
-                Regex("""class\\s+GeneratedGameImplementation\\b""").containsMatchIn(source.content) &&
+                source.content.contains("class GeneratedGameImplementation") &&
                 source.content.contains("GeneratedGamePort")
         }
         require(hasEntrypoint) {
