@@ -18,6 +18,11 @@ test -f "$APK_PATH" || { echo "Release APK was not produced: $APK_PATH" >&2; exi
 
 APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
 test -n "$APKSIGNER" || { echo "Android build-tools apksigner was not found." >&2; exit 4; }
+TOOLS_DIR="$(dirname "$APKSIGNER")"
+ZIPALIGN="$TOOLS_DIR/zipalign"
+test -x "$ZIPALIGN" || { echo "Android build-tools zipalign was not found." >&2; exit 5; }
+ALIGNED_PATH="$PROJECT_DIR/app/build/outputs/apk/release/app-release-aligned.apk"
+"$ZIPALIGN" -f -p 4 "$APK_PATH" "$ALIGNED_PATH"
 
 "$APKSIGNER" sign \
   --ks "$ROM2APK_KEYSTORE" \
@@ -25,7 +30,8 @@ test -n "$APKSIGNER" || { echo "Android build-tools apksigner was not found." >&
   --ks-pass env:ROM2APK_STORE_PASSWORD \
   --key-pass env:ROM2APK_KEY_PASSWORD \
   --out "$SIGNED_PATH" \
-  "$APK_PATH"
+  "$ALIGNED_PATH"
 
 "$APKSIGNER" verify --verbose --print-certs "$SIGNED_PATH"
+"$ZIPALIGN" -c -v 4 "$SIGNED_PATH"
 echo "Signed APK: $SIGNED_PATH"
