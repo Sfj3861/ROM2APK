@@ -286,10 +286,10 @@ private fun Rom2ApkApp() {
 @Composable
 private fun WelcomeHeader() {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("Tus juegos, tus APK.", style = MaterialTheme.typography.headlineMedium,
+        Text("Prepara tus juegos para Android.", style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold)
         Text(
-            "Importa un archivo de juego y prepara una aplicación Android a tu manera.",
+            "Importa una ROM, analiza su estructura y consulta qué perfiles de portabilidad están disponibles.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
