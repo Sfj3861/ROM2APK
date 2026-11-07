@@ -18,7 +18,7 @@ object RomAnalyzer {
 
     fun analyze(format: RomFormat, input: InputStream, knownSize: Long? = null): RomAnalysis {
         val header = input.use { readPrefix(it, MAX_HEADER_BYTES) }
-        val size = knownSize ?: header.size.toLong()
+        val size = knownSize ?: if (header.size == MAX_HEADER_BYTES) Long.MAX_VALUE else header.size.toLong()
         return when (format) {
             RomFormat.NES -> checkNes(header, size)
             RomFormat.SFC, RomFormat.SMC -> checkSnes(header, size)
@@ -53,6 +53,7 @@ object RomAnalyzer {
             val chrBanks = u8(data, 5)
             if (prgBanks == 0) return invalid("La cabecera iNES declara cero bancos PRG.")
             val declaredMinimum = 16L + trainerBytes + prgBanks * 16_384L + chrBanks * 8_192L
+            if (size == Long.MAX_VALUE && data.size.toLong() < declaredMinimum) return inconclusive("El tamaño declarado supera el prefijo inspeccionado y el proveedor no informa del tamaño total. No se puede confirmar si el archivo está truncado.")
             if (size < declaredMinimum) return invalid("El archivo está truncado: su tamaño es inferior al declarado en la cabecera iNES.")
         }
         return validated("Cabecera iNES/NES 2.0 reconocida. La identificación completa del mapper y la prueba de ejecución quedan pendientes.")
@@ -112,6 +113,7 @@ object RomAnalyzer {
         if (size < 0x20 || data.size < 4) return invalid("El archivo CIA es demasiado pequeño.")
         val headerSize = u32le(data, 0)
         if (headerSize < 0x20 || headerSize > size) return invalid("El tamaño declarado de la cabecera CIA no es válido.")
+        if (size == Long.MAX_VALUE && headerSize > data.size) return inconclusive("La cabecera CIA declara una longitud superior al prefijo inspeccionado y no se conoce el tamaño total.")
         return special("Cabecera CIA plausible. Es necesario validar secciones, contenido, cifrado y requisitos de instalación.")
     }
 
