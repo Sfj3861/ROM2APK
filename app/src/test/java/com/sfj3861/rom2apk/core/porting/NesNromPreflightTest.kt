@@ -21,7 +21,7 @@ class NesNromPreflightTest {
         assertEquals(RomCheckStatus.VALIDATED, result.status)
         assertEquals("NES-NROM-ANALYZED", result.diagnosticCode)
         assertTrue(result.details.contains("Instrucciones alcanzables: 2"))
-        assertTrue(result.details.contains("no equivale a una traducción ejecutable"))
+        assertTrue(result.details.contains("Esto no es un juego ejecutable"))
     }
 
     @Test
