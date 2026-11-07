@@ -16,7 +16,7 @@ class AdditionalCartridgeImageTest {
         "01".forEachIndexed { i, c -> rom[0xB0 + i] = c.code.toByte() }
         rom[0xB2] = 0x96.toByte()
         val sum = (0xA0..0xBC).sumOf { rom[it].toInt() and 0xFF }
-        rom[0xBD] = ((0x19 - sum) and 0xFF).toByte()
+        rom[0xBD] = ((0xE7 - sum) and 0xFF).toByte()
 
         val result = GbaCartridgeImage.parse(rom)
         assertTrue(result is GbaCartridgeImage.Result.Supported)
