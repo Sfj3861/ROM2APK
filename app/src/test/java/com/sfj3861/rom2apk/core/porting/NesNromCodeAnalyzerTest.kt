@@ -41,6 +41,22 @@ class NesNromCodeAnalyzerTest {
         assertTrue(result.diagnostics.any { it.contains("no traducible") })
     }
 
+
+    @Test
+    fun decodesInstructionAcrossSixteenKiBPrgMirrorBoundary() {
+        val prg = ByteArray(16_384) { 0xEA.toByte() }
+        prg[0x3FFF] = 0xA9.toByte()
+        prg[0] = 0x42
+        prg[1] = 0x60
+        prg[0x3FFC] = 0xFF.toByte()
+        prg[0x3FFD] = 0xBF.toByte()
+
+        val result = NesNromCodeAnalyzer.analyze(prg)
+        assertTrue(result.analysisComplete)
+        assertEquals(listOf(0xBFFF, 0xC001), result.instructions.map { it.address })
+        assertEquals("#$42", result.instructions.first().operand)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsNonNromPrgSize() {
         NesNromCodeAnalyzer.analyze(ByteArray(8192))
