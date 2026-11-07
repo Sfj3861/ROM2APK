@@ -42,6 +42,30 @@ class SafeExtractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 safe_extract(archive, root / "out")
 
+
+    def test_rejects_noncanonical_path_aliases(self):
+        for unsafe_name in ("app//file.kt", "app/./file.kt", "C:/outside.txt"):
+            with self.subTest(name=unsafe_name), tempfile.TemporaryDirectory() as temp:
+                root = pathlib.Path(temp)
+                archive = root / "alias.zip"
+                with zipfile.ZipFile(archive, "w") as zf:
+                    zf.writestr(unsafe_name, "bad")
+                target = root / "out"
+                target.mkdir()
+                with self.assertRaises(ValueError):
+                    safe_extract(archive, target)
+
+    def test_rejects_backslash_paths(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = pathlib.Path(temp)
+            archive = root / "backslash.zip"
+            with zipfile.ZipFile(archive, "w") as zf:
+                zf.writestr("app\\\\file.kt", "bad")
+            target = root / "out"
+            target.mkdir()
+            with self.assertRaises(ValueError):
+                safe_extract(archive, target)
+
     def test_rejects_windows_style_traversal(self):
         with tempfile.TemporaryDirectory() as temp:
             root = pathlib.Path(temp)
