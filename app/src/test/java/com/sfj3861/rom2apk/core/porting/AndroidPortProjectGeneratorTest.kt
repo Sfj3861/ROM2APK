@@ -2,7 +2,6 @@ package com.sfj3861.rom2apk.core.porting
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.util.zip.ZipInputStream
@@ -19,7 +18,7 @@ class AndroidPortProjectGeneratorTest {
         gameTitle = "Juego de prueba",
         sourceFiles = listOf(
             PortSourceFile(
-                "app/src/main/java/generated/port/GeneratedGameImplementation.kt",
+                "app/src/main/java/com/example/portedgame/GeneratedGameImplementation.kt",
                 "package generated.port\nimport android.app.Activity\nimport android.view.View\nimport android.widget.FrameLayout\nclass GeneratedGameImplementation : GeneratedGamePort {\n override val title = \"Test\"\n override fun createSession(activity: Activity) = object : GeneratedGameSession { override val view: View = FrameLayout(activity); override fun onCreate() {} ; override fun onPause() {} ; override fun onResume() {} ; override fun onDestroy() {} ; override fun onInputChanged(pressed: Set<GameAction>) {} }\n}"
             )
         )
@@ -38,7 +37,7 @@ class AndroidPortProjectGeneratorTest {
 
         assertTrue("app/build.gradle.kts" in entries)
         assertTrue("app/src/main/AndroidManifest.xml" in entries)
-        assertTrue("app/src/main/java/generated/port/GeneratedGameImplementation.kt" in entries)
+        assertTrue("app/src/main/java/com/example/portedgame/GeneratedGameImplementation.kt" in entries)
         assertTrue("app/src/main/java/generated/port/VirtualControlsView.kt" in entries)
         assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("dispatchKeyEvent"))
         assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("KEYCODE_DPAD_UP"))
