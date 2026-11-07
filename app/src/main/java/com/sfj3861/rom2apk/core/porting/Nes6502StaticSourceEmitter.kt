@@ -111,6 +111,7 @@ object Nes6502StaticSourceEmitter {
         val operand = i.bytes.getOrElse(1) { 0 }
         when (i.mnemonic) {
             "NOP" -> out.appendLine("                    state.pc = 0x${hexValue(next)}")
+            "RTS" -> out.appendLine("                    return state")
             "LDA", "LDX", "LDY" -> {
                 val value = if (i.mode == Mos6502Disassembler.AddressMode.IMMEDIATE)
                     "0x${hexValue(operand)}" else "(state.ram[0x${hexValue(operand)}].toInt() and 0xFF)"
