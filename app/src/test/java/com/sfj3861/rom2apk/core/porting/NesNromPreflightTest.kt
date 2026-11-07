@@ -12,7 +12,7 @@ class NesNromPreflightTest {
             bytes[4] = 1
             code.forEachIndexed { index, value -> bytes[16 + index] = value.toByte() }
             bytes[16 + 0x3FFC] = 0x00
-            bytes[16 + 0x3FFD] = 0x80
+            bytes[16 + 0x3FFD] = 0x80.toByte()
         }
 
     @Test
