@@ -20,7 +20,9 @@ object AndroidPortProjectGenerator {
         require(translation.sourceFiles.isNotEmpty()) { "El backend no ha generado código fuente." }
         require(isValidApplicationId(request.applicationId)) { "Identificador de aplicación no válido." }
         require(request.applicationName.isNotBlank()) { "El nombre de la aplicación está vacío." }
-        require(request.versionName.isNotBlank()) { "La versión está vacía." }
+        require(request.versionName.matches(Regex("[A-Za-z0-9][A-Za-z0-9._+-]{0,49}"))) { "La versión debe tener entre 1 y 50 caracteres seguros." }
+        require(translation.backendId.isNotBlank()) { "El backend no tiene identificador." }
+        require(translation.gameTitle.isNotBlank()) { "La traducción no tiene título." }
 
         val files = linkedMapOf<String, String>()
         files["settings.gradle.kts"] = settingsGradle()
@@ -36,19 +38,23 @@ object AndroidPortProjectGenerator {
             AndroidInputTemplates.activitySource()
         files["README-PORT.md"] = readme(request, translation)
 
+        require(translation.sourceFiles.map { it.path }.distinct().size == translation.sourceFiles.size) {
+            "El backend ha repetido una ruta de archivo."
+        }
         translation.sourceFiles.forEach { source ->
             require(isSafeRelativePath(source.path)) { "Ruta de fuente no permitida: ${source.path}" }
             require(source.path.endsWith(".kt") || source.path.endsWith(".java")) {
                 "El generador actual compila fuentes Kotlin/Java. El backend debe emitir una de ellas: ${source.path}"
             }
             require(source.path !in files) { "El backend intenta sobrescribir un archivo reservado: ${source.path}" }
+            require(source.content.isNotBlank()) { "El archivo de fuente está vacío: ${source.path}" }
             files[source.path] = source.content
         }
 
         val output = ByteArrayOutputStream()
         ZipOutputStream(output).use { zip ->
             files.toSortedMap().forEach { (path, content) ->
-                zip.putNextEntry(ZipEntry(path))
+                zip.putNextEntry(ZipEntry(path).apply { time = 0L })
                 zip.write(content.toByteArray(Charsets.UTF_8))
                 zip.closeEntry()
             }
@@ -60,15 +66,19 @@ object AndroidPortProjectGenerator {
         value.length in 3..200 &&
             value.split('.').size >= 2 &&
             value.split('.').all { segment ->
-                segment.isNotEmpty() && segment.first().isLetter() &&
-                    segment.all { it.isLetterOrDigit() || it == '_' }
+                segment.isNotEmpty() &&
+                    segment.first() in ('A'..'Z') + ('a'..'z') &&
+                    segment.all { it in ('A'..'Z') || it in ('a'..'z') || it in ('0'..'9') || it == '_' }
             }
 
     private fun isSafeRelativePath(path: String): Boolean {
         if (path.isBlank() || path.startsWith('/') || '\\' in path) return false
+        if (!path.startsWith("app/src/main/java/")) return false
         val parts = path.split('/')
-        return parts.all { it.isNotBlank() && it != "." && it != ".." } &&
-            !path.startsWith("app/src/main/AndroidManifest.xml")
+        if (parts.any { it.isBlank() || it == "." || it == ".." }) return false
+        if (!path.endsWith(".kt") && !path.endsWith(".java")) return false
+        if (path.startsWith("app/src/main/java/generated/port/")) return false
+        return true
     }
 
     private fun settingsGradle() = """

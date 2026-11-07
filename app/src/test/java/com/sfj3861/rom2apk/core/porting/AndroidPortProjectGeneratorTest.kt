@@ -2,6 +2,7 @@ package com.sfj3861.rom2apk.core.porting
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.util.zip.ZipInputStream
@@ -79,6 +80,45 @@ class AndroidPortProjectGeneratorTest {
         assertTrue(AndroidPortProjectGenerator.isValidApplicationId("com.sfj3861.game"))
         assertFalse(AndroidPortProjectGenerator.isValidApplicationId("com..game"))
         assertFalse(AndroidPortProjectGenerator.isValidApplicationId("one"))
+    }
+
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsBackendSourceOutsideJavaSourceRoot() {
+        AndroidPortProjectGenerator.generate(
+            request,
+            translation.copy(sourceFiles = listOf(PortSourceFile("app/build.gradle.kts", "malicious")))
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsBackendSourceInsideReservedRuntimePackage() {
+        AndroidPortProjectGenerator.generate(
+            request,
+            translation.copy(sourceFiles = listOf(PortSourceFile(
+                "app/src/main/java/generated/port/GeneratedPortActivity.kt", "package generated.port"
+            )))
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsVersionNameThatCouldBreakGeneratedGradle() {
+        AndroidPortProjectGenerator.generate(
+            request.copy(versionName = "1.0\"\\napplicationId = \"evil"),
+            translation
+        )
+    }
+
+    @Test
+    fun generatedProjectZipIsDeterministic() {
+        val first = AndroidPortProjectGenerator.generate(request, translation)
+        val second = AndroidPortProjectGenerator.generate(request, translation)
+        assertTrue(first.contentEquals(second))
+    }
+
+    @Test
+    fun rejectsNonAsciiApplicationIdSegments() {
+        assertFalse(AndroidPortProjectGenerator.isValidApplicationId("com.ejemplo.ñandú"))
     }
 
     @Test(expected = IllegalArgumentException::class)
