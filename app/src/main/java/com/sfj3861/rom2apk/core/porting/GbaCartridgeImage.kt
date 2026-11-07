@@ -25,7 +25,7 @@ object GbaCartridgeImage {
     fun parse(bytes: ByteArray): Result {
         if (bytes.size < 0xC0) return Result.Invalid("Cabecera GBA incompleta: se necesitan al menos 192 bytes.")
         if (u8(bytes, 0xB2) != 0x96) return Result.Invalid("Byte fijo de cabecera GBA incorrecto.")
-        val expected = (0x19 - (0xA0..0xBC).sumOf { u8(bytes, it) }) and 0xFF
+        val expected = (0xE7 - (0xA0..0xBC).sumOf { u8(bytes, it) }) and 0xFF
         if (expected != u8(bytes, 0xBD)) return Result.Invalid("Checksum de cabecera GBA incorrecto.")
         val entry = u32(bytes, 0)
         if ((entry and 0xFF000000.toInt()) != 0xEA000000.toInt()) {
