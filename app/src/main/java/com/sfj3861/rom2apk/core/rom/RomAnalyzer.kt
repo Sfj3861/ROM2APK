@@ -36,8 +36,16 @@ object RomAnalyzer {
         val buffer = ByteArray(8192)
         while (output.size() < limit) {
             val count = input.read(buffer, 0, minOf(buffer.size, limit - output.size()))
-            if (count <= 0) break
-            output.write(buffer, 0, count)
+            if (count < 0) break
+            if (count == 0) {
+                // Some custom ContentResolver streams can return zero without reaching EOF.
+                // Fall back to a single-byte read so a transient zero is not mistaken for EOF.
+                val single = input.read()
+                if (single < 0) break
+                output.write(single)
+            } else {
+                output.write(buffer, 0, count)
+            }
         }
         return output.toByteArray()
     }
