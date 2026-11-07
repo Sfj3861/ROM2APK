@@ -80,4 +80,24 @@ class RomAnalyzerTest {
         assertEquals(RomCheckStatus.INVALID,
             RomAnalyzer.analyze(RomFormat.GB, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
     }
+    @Test fun continuesReadingWhenStreamTemporarilyReturnsZero() {
+        val bytes = ByteArray(16 + 16_384)
+        bytes[0] = 0x4E; bytes[1] = 0x45; bytes[2] = 0x53; bytes[3] = 0x1A
+        bytes[4] = 1
+        val delegate = ByteArrayInputStream(bytes)
+        val unusualStream = object : java.io.InputStream() {
+            private var returnZero = true
+            override fun read(): Int = delegate.read()
+            override fun read(target: ByteArray, offset: Int, length: Int): Int {
+                if (returnZero) {
+                    returnZero = false
+                    return 0
+                }
+                return delegate.read(target, offset, length)
+            }
+        }
+        assertEquals(RomCheckStatus.VALIDATED,
+            RomAnalyzer.analyze(RomFormat.NES, unusualStream, bytes.size.toLong()).status)
+    }
+
 }
