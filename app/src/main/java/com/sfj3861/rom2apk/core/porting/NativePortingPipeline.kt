@@ -13,6 +13,11 @@ sealed interface PortingOutcome {
         val reason: String
     ) : PortingOutcome
 
+    data class Inspected(
+        val backendId: String,
+        val inspection: PortInspection
+    ) : PortingOutcome
+
     data class Rejected(
         val backendId: String,
         val inspection: PortInspection
@@ -55,9 +60,10 @@ class NativePortingPipeline(backends: Collection<NativePortBackend>) {
                 "No existe todavía un porteador nativo para ${format.description}. No se utilizará un emulador como alternativa."
             )
         val inspection = backend.inspect(bytes, fileName)
+        // Inspection is a preflight only; it does not claim that translation or
+        // compilation will succeed.
         return if (inspection.supported) {
-            // Inspection alone never claims that a complete port has been built.
-            PortingOutcome.Rejected(backend.id, inspection)
+            PortingOutcome.Inspected(backend.id, inspection)
         } else {
             PortingOutcome.Rejected(backend.id, inspection)
         }
