@@ -13,6 +13,14 @@ class RomAnalyzerTest {
             RomAnalyzer.analyze(RomFormat.NES, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
     }
 
+    @Test fun doesNotClaimTruncationWhenProviderDoesNotExposeSize() {
+        val bytes = ByteArray(16 + 8 * 16_384)
+        bytes[0] = 0x4E; bytes[1] = 0x45; bytes[2] = 0x53; bytes[3] = 0x1A
+        bytes[4] = 8
+        assertEquals(RomCheckStatus.INCONCLUSIVE,
+            RomAnalyzer.analyze(RomFormat.NES, ByteArrayInputStream(bytes)).status)
+    }
+
     @Test fun rejectsNesFileWithWrongMagic() {
         val bytes = ByteArray(64)
         assertEquals(RomCheckStatus.INVALID,
