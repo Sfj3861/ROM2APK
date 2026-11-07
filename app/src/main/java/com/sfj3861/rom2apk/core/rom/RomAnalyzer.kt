@@ -79,7 +79,7 @@ object RomAnalyzer {
     private fun checkSnes(data: ByteArray, size: Long): RomAnalysis {
         if (size < 0x8000 || data.size < 0x8000) return invalid("El archivo es demasiado pequeño para una imagen SNES convencional.")
         // Mapping modes and optional 512-byte copier headers vary. Treat this as a heuristic.
-        val candidates = listOf(0x7FC0, 0xFFC0, 0x7FC0 + 512)
+        val candidates = listOf(0x7FC0, 0xFFC0, 0x7FC0 + 512, 0xFFC0 + 512)
         val plausible = candidates.any { offset ->
             offset + 0x20 <= data.size &&
                 u8(data, offset + 0x15) in 0x20..0x3F &&
