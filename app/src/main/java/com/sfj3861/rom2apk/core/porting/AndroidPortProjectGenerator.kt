@@ -18,6 +18,14 @@ object AndroidPortProjectGenerator {
     ): ByteArray {
         require(translation.success) { "No se puede generar un proyecto desde una traducción fallida." }
         require(translation.sourceFiles.isNotEmpty()) { "El backend no ha generado código fuente." }
+        val hasEntrypoint = translation.sourceFiles.any { source ->
+            source.content.contains("package generated.port") &&
+                Regex("""class\\s+GeneratedGameImplementation\\b""").containsMatchIn(source.content) &&
+                source.content.contains("GeneratedGamePort")
+        }
+        require(hasEntrypoint) {
+            "El backend debe generar GeneratedGameImplementation en el paquete generated.port e implementar GeneratedGamePort."
+        }
         require(isValidApplicationId(request.applicationId)) { "Identificador de aplicación no válido." }
         require(request.applicationName.isNotBlank()) { "El nombre de la aplicación está vacío." }
         require(request.versionName.matches(Regex("[A-Za-z0-9][A-Za-z0-9._+-]{0,49}"))) { "La versión debe tener entre 1 y 50 caracteres seguros." }
