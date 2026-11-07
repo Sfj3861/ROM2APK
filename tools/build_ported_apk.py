@@ -31,7 +31,7 @@ def safe_extract(archive: pathlib.Path, destination: pathlib.Path) -> None:
         seen: set[str] = set()
         for entry in entries:
             name = entry.filename
-            if "\\\\" in name or "\\x00" in name:
+            if "\\" in name or "\x00" in name:
                 raise ValueError(f"Ruta insegura en ZIP: {entry.filename}")
             path = pathlib.PurePosixPath(name)
             if path.is_absolute() or not path.parts or any(p in ("", ".", "..") for p in path.parts):
