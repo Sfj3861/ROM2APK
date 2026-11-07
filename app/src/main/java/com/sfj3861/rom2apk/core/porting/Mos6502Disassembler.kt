@@ -46,12 +46,6 @@ object Mos6502Disassembler {
             E0 CPX IMMEDIATE | E1 SBC INDEXED_INDIRECT | E4 CPX ZERO_PAGE | E5 SBC ZERO_PAGE | E6 INC ZERO_PAGE | E8 INX IMPLIED | E9 SBC IMMEDIATE | EA NOP IMPLIED | EC CPX ABSOLUTE | ED SBC ABSOLUTE | EE INC ABSOLUTE
             F0 BEQ RELATIVE | F1 SBC INDIRECT_INDEXED | F5 SBC ZERO_PAGE_X | F6 INC ZERO_PAGE_X | F8 SED IMPLIED | F9 SBC ABSOLUTE_Y | FD SBC ABSOLUTE_X | FE INC ABSOLUTE_X
         """.trimIndent()
-        rows.split(Regex("\\s*\\|\\s*")).flatMap { it.split(Regex("\\s+")) }
-        rows.split("|").forEach { row ->
-            row.trim().split(Regex("\\s+")).forEach { token ->
-                // Each token is parsed below as a compact opcode tuple.
-            }
-        }
         rows.replace("|", " ").split(Regex("\\s+")).filter { it.isNotBlank() }
             .chunked(3).forEach { tuple ->
                 if (tuple.size == 3) {
