@@ -16,7 +16,7 @@ class NesNromCodeAnalyzerTest {
         val prg = prgWithReset(0xA9, 0x01, 0xD0, 0x02, 0xEA, 0xEA, 0x60)
         val result = NesNromCodeAnalyzer.analyze(prg)
         assertEquals(0x8000, result.resetVector)
-        assertEquals(setOf(0x8000, 0x8002, 0x8004, 0x8006), result.reachableAddresses)
+        assertEquals(setOf(0x8000, 0x8002, 0x8004, 0x8005, 0x8006), result.reachableAddresses)
         assertTrue(result.analysisComplete)
     }
 
