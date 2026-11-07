@@ -43,7 +43,7 @@ class Nes6502StaticSourceEmitterTest {
         )
         assertFalse(output.success)
         assertNull(output.source)
-        assertTrue(output.diagnostics.any { it.contains("STA") && it.contains("no traducible") })
+        assertTrue(output.diagnostics.any { it.contains("STA") && it.contains("No traducible") })
     }
 
     @Test
