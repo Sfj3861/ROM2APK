@@ -24,6 +24,7 @@ object NesNromPreflight {
             is NesNromImage.Result.Supported -> {
                 val image = parsed.image
                 val code = NesNromCodeAnalyzer.analyze(image.prgRom)
+                val cpuTranslation = if (code.analysisComplete) Nes6502StaticSourceEmitter.emit(code) else null
                 val summary = buildString {
                     append("NROM reconocido: ")
                     append(if (image.prgRom.size == 16_384) "16 KiB PRG" else "32 KiB PRG")
@@ -36,6 +37,14 @@ object NesNromPreflight {
                     append(". Instrucciones alcanzables: ")
                     append(code.instructions.size)
                     append(".")
+                    if (cpuTranslation?.success == true) {
+                        append(" Instrucciones convertibles al subconjunto Kotlin estático: ")
+                        append(cpuTranslation.translatedInstructionCount)
+                        append(".")
+                    } else if (cpuTranslation != null) {
+                        append(" El traductor estático parcial no cubre todo el flujo: ")
+                        append(cpuTranslation.diagnostics.take(3).joinToString(" "))
+                    }
                     if (code.diagnostics.isNotEmpty()) {
                         append(" Diagnósticos: ")
                         append(code.diagnostics.take(4).joinToString(" "))
@@ -45,9 +54,9 @@ object NesNromPreflight {
                     RomAnalysis(
                         RomCheckStatus.VALIDATED,
                         "NROM y flujo de código analizados",
-                        "$summary El análisis estático no equivale a una traducción ejecutable; faltan PPU, APU, interrupciones y semántica de hardware.",
+                        "$summary El traductor solo genera código CPU para un subconjunto limitado. Esto no es un juego ejecutable: faltan PPU, APU, pila/retornos completos, interrupciones, temporización, bus y semántica de hardware.",
                         "NES-NROM-ANALYZED",
-                        "El siguiente hito es traducir el subconjunto de instrucciones y validar equivalencia con pruebas."
+                        "El siguiente hito es ampliar las instrucciones traducibles y construir los subsistemas nativos de vídeo, audio y hardware antes de habilitar la exportación de juegos."
                     )
                 } else {
                     RomAnalysis(
