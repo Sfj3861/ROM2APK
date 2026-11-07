@@ -246,6 +246,19 @@ private fun Rom2ApkApp() {
                 )
                 LibraryCard(
                     entries = library,
+                    onSelect = { entry ->
+                        val uri = uriFromString(entry.uri)
+                        importedUri = uri
+                        importedRom = ImportedRom(
+                            displayName = entry.displayName,
+                            fileName = entry.fileName,
+                            mimeType = context.contentResolver.getType(uri),
+                            sizeBytes = entry.sizeBytes,
+                            format = entry.format
+                        )
+                        analysis = null
+                        errorMessage = null
+                    },
                     onRemove = { entry ->
                         RomLibraryStore.remove(context, entry.uri)
                         runCatching { context.contentResolver.releasePersistableUriPermission(uriFromString(entry.uri), android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION) }
@@ -410,7 +423,11 @@ private fun ImportCard(
 }
 
 @Composable
-private fun LibraryCard(entries: List<LibraryRom>, onRemove: (LibraryRom) -> Unit) {
+private fun LibraryCard(
+    entries: List<LibraryRom>,
+    onSelect: (LibraryRom) -> Unit,
+    onRemove: (LibraryRom) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -434,7 +451,10 @@ private fun LibraryCard(entries: List<LibraryRom>, onRemove: (LibraryRom) -> Uni
                             Text("${entry.format.extension.uppercase(Locale.ROOT)} · ${entry.sizeBytes?.let(::formatBytes) ?: "Tamaño desconocido"}",
                                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        OutlinedButton(onClick = { onRemove(entry) }) { Text("Quitar") }
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            OutlinedButton(onClick = { onSelect(entry) }) { Text("Abrir") }
+                            OutlinedButton(onClick = { onRemove(entry) }) { Text("Quitar") }
+                        }
                     }
                     if (index != entries.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
