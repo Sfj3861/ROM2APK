@@ -71,7 +71,8 @@ object Mos6502Disassembler {
             val address = (startAddress + offset) and 0xFFFF
             val opcode = bytes[offset].toInt() and 0xFF
             val definition = definitions[opcode]
-            val length = definition?.mode?.size ?: 1
+            // BRK consumes a padding/signature byte even though its addressing mode is implied.
+            val length = if (opcode == 0x00) 2 else definition?.mode?.size ?: 1
             val available = minOf(length, bytes.size - offset)
             val instructionBytes = (0 until available).map { bytes[offset + it].toInt() and 0xFF }
             val complete = available == length
