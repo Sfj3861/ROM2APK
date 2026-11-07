@@ -42,6 +42,10 @@ gradle :app:assembleDebug
 
 The first build requires network access to resolve Gradle and Maven dependencies.
 
+GitHub Actions also builds the current ROM2APK debug app and publishes it as the
+`rom2apk-debug-apk` workflow artifact (14-day retention). This is the ROM2APK
+utility app, **not** a playable game port.
+
 ## Planned milestones
 
 1. Android foundation and ROM import.
