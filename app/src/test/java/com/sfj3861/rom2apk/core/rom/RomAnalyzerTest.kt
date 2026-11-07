@@ -100,4 +100,33 @@ class RomAnalyzerTest {
             RomAnalyzer.analyze(RomFormat.NES, unusualStream, bytes.size.toLong()).status)
     }
 
+    @Test fun validatesNes2LinearPrgAndChrSizes() {
+        val bytes = ByteArray(16 + 16_384 + 8_192)
+        bytes[0] = 0x4E; bytes[1] = 0x45; bytes[2] = 0x53; bytes[3] = 0x1A
+        bytes[4] = 1
+        bytes[7] = 0x08
+        assertEquals(RomCheckStatus.VALIDATED,
+            RomAnalyzer.analyze(RomFormat.NES, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
+    }
+
+    @Test fun validatesNes2ExponentEncodedPrgSize() {
+        val bytes = ByteArray(16 + 16_384)
+        bytes[0] = 0x4E; bytes[1] = 0x45; bytes[2] = 0x53; bytes[3] = 0x1A
+        bytes[4] = (14 shl 2).toByte()
+        bytes[7] = 0x08
+        bytes[9] = 0x0F
+        assertEquals(RomCheckStatus.VALIDATED,
+            RomAnalyzer.analyze(RomFormat.NES, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
+    }
+
+    @Test fun rejectsTruncatedExponentEncodedNes2Image() {
+        val bytes = ByteArray(32)
+        bytes[0] = 0x4E; bytes[1] = 0x45; bytes[2] = 0x53; bytes[3] = 0x1A
+        bytes[4] = (14 shl 2).toByte()
+        bytes[7] = 0x08
+        bytes[9] = 0x0F
+        assertEquals(RomCheckStatus.INVALID,
+            RomAnalyzer.analyze(RomFormat.NES, ByteArrayInputStream(bytes), bytes.size.toLong()).status)
+    }
+
 }

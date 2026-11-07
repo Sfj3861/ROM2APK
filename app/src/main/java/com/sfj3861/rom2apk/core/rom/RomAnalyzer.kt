@@ -56,13 +56,22 @@ object RomAnalyzer {
         val trainerBytes = if (u8(data, 6) and 0x04 != 0) 512L else 0L
         if (size <= 16L + trainerBytes) return invalid("La imagen no contiene datos de juego después de la cabecera.")
         val isNes2 = (u8(data, 7) and 0x0C) == 0x08
-        if (!isNes2) {
+        val declaredPayload = if (isNes2) {
+            val prgSize = nes2RomSize(u8(data, 4), u8(data, 9) and 0x0F, 16_384L)
+            val chrSize = nes2RomSize(u8(data, 5), u8(data, 9) ushr 4, 8_192L)
+            saturatedAdd(prgSize, chrSize)
+        } else {
             val prgBanks = u8(data, 4)
             val chrBanks = u8(data, 5)
             if (prgBanks == 0) return invalid("La cabecera iNES declara cero bancos PRG.")
-            val declaredMinimum = 16L + trainerBytes + prgBanks * 16_384L + chrBanks * 8_192L
-            if (size == Long.MAX_VALUE && data.size.toLong() < declaredMinimum) return inconclusive("El tamaño declarado supera el prefijo inspeccionado y el proveedor no informa del tamaño total. No se puede confirmar si el archivo está truncado.")
-            if (size < declaredMinimum) return invalid("El archivo está truncado: su tamaño es inferior al declarado en la cabecera iNES.")
+            saturatedAdd(prgBanks * 16_384L, chrBanks * 8_192L)
+        }
+        val declaredMinimum = saturatedAdd(16L + trainerBytes, declaredPayload)
+        if (size == Long.MAX_VALUE && data.size.toLong() < declaredMinimum) {
+            return inconclusive("El tamaño declarado supera el prefijo inspeccionado y el proveedor no informa del tamaño total. No se puede confirmar si el archivo está truncado.")
+        }
+        if (size < declaredMinimum) {
+            return invalid("El archivo está truncado: su tamaño es inferior al tamaño PRG/CHR declarado en la cabecera NES.")
         }
         return validated("Cabecera iNES/NES 2.0 reconocida. La identificación completa del mapper y la prueba de ejecución quedan pendientes.")
     }
@@ -124,6 +133,26 @@ object RomAnalyzer {
         if (size == Long.MAX_VALUE && headerSize > data.size) return inconclusive("La cabecera CIA declara una longitud superior al prefijo inspeccionado y no se conoce el tamaño total.")
         return special("Cabecera CIA plausible. Es necesario validar secciones, contenido, cifrado y requisitos de instalación.")
     }
+
+    /** NES 2.0 ROM size encoding: linear bank count or exponent/multiplier form. */
+    private fun nes2RomSize(lsb: Int, msb: Int, unit: Long): Long {
+        if (msb != 0x0F) {
+            val banks = (msb shl 8) or lsb
+            return banks.toLong() * unit
+        }
+        val exponent = lsb ushr 2
+        val multiplier = ((lsb and 0x03) * 2 + 1).toLong()
+        if (exponent >= 63) return Long.MAX_VALUE
+        val base = 1L shl exponent
+        return if (base > Long.MAX_VALUE / multiplier) Long.MAX_VALUE else base * multiplier
+    }
+
+    private fun saturatedAdd(left: Long, right: Long): Long =
+        if (left == Long.MAX_VALUE || right == Long.MAX_VALUE || left > Long.MAX_VALUE - right) {
+            Long.MAX_VALUE
+        } else {
+            left + right
+        }
 
     private fun crc16(data: ByteArray, start: Int, endExclusive: Int): Int {
         var crc = 0xFFFF
