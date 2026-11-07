@@ -29,7 +29,10 @@ jobs:
         with:
           gradle-version: '8.13'
 
-      - name: Run unit tests
+      - name: Run Python build-tool tests
+        run: python3 -m unittest discover -s tools -p 'test_*.py' -v
+
+      - name: Run Android unit tests
         run: gradle :app:testDebugUnitTest
 
       - name: Assemble debug APK
