@@ -38,6 +38,12 @@ class NativePortingPipelineTest {
     }
 
     @Test
+    fun inspectReportsSupportedBackendWithoutPretendingToTranslate() {
+        val result = NativePortingPipeline(listOf(FakeBackend())).inspect("game.gb", byteArrayOf(1))
+        assertTrue(result is PortingOutcome.Inspected)
+    }
+
+    @Test
     fun rejectsUnsupportedInspection() {
         val result = NativePortingPipeline(listOf(FakeBackend(canInspect = false))).translate(
             "game.gb", byteArrayOf(1), PortRequest("com.example.game", "Game")
