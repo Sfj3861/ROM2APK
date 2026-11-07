@@ -39,6 +39,7 @@ class AndroidPortProjectGeneratorTest {
         assertTrue("app/src/main/AndroidManifest.xml" in entries)
         assertTrue("app/src/main/java/com/example/portedgame/GeneratedGameImplementation.kt" in entries)
         assertTrue("app/src/main/java/generated/port/VirtualControlsView.kt" in entries)
+        assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("val gamePort: GeneratedGamePort = GeneratedGameImplementation()"))
         assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("dispatchKeyEvent"))
         assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("KEYCODE_DPAD_UP"))
         assertTrue(entries.getValue("app/src/main/java/generated/port/GeneratedPortActivity.kt").contains("KEYCODE_W"))
