@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Games
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.lightColorScheme
@@ -95,6 +97,7 @@ private fun Rom2ApkApp() {
     var isAnalyzing by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var exportMode by remember { mutableStateOf(ExportMode.SINGLE) }
+    var showAbout by remember { mutableStateOf(false) }
     var library by remember { mutableStateOf(RomLibraryStore.load(context)) }
     val scope = androidx.compose.runtime.rememberCoroutineScope()
 
@@ -164,8 +167,8 @@ private fun Rom2ApkApp() {
                         }
                     },
                     actions = {
-                        androidx.compose.material3.IconButton(onClick = { }) {
-                            Icon(Icons.Default.Settings, contentDescription = "Ajustes")
+                        androidx.compose.material3.IconButton(onClick = { showAbout = true }) {
+                            Icon(Icons.Default.Info, contentDescription = "Información de ROM2APK")
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -279,6 +282,21 @@ private fun Rom2ApkApp() {
                         .padding(bottom = 12.dp)
                 )
             }
+        }
+        if (showAbout) {
+            AlertDialog(
+                onDismissRequest = { showAbout = false },
+                title = { Text("Acerca de ROM2APK") },
+                text = {
+                    Text(
+                        "ROM2APK analiza ROMs y prepara la infraestructura para convertir juegos en código Android nativo. " +
+                            "El backend de portabilidad todavía está en desarrollo: esta versión no genera APKs jugables ni utiliza emuladores."
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { showAbout = false }) { Text("Cerrar") }
+                }
+            )
         }
     }
 }
