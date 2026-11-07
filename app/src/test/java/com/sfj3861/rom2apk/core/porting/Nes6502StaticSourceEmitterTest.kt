@@ -15,7 +15,7 @@ class Nes6502StaticSourceEmitterTest {
     @Test
     fun emitsDirectKotlinForImmediateLoadsTransfersAndReturn() {
         val output = Nes6502StaticSourceEmitter.emit(
-            analyze(0xA9, 0x2A, 0xAA, 0xE8, 0x60)
+            analyze(0xA9, 0x2A, 0xAA, 0xE8, 0x4C, 0x03, 0x80)
         )
         assertTrue(output.success)
         assertEquals(4, output.translatedInstructionCount)
@@ -23,14 +23,14 @@ class Nes6502StaticSourceEmitterTest {
         assertTrue(source.contains("state.a = setNZ(state, 0x002A)"))
         assertTrue(source.contains("state.x = setNZ(state, state.a)"))
         assertTrue(source.contains("state.x = setNZ(state, state.x + 1)"))
-        assertTrue(source.contains("return state"))
+        assertTrue(source.contains("state.pc = 0x8003"))
         assertFalse(source.contains("when (opcode)"))
     }
 
     @Test
     fun emitsConditionalBranchesAsDirectFlagTests() {
         val output = Nes6502StaticSourceEmitter.emit(
-            analyze(0xA9, 0x00, 0xD0, 0x02, 0xEA, 0xEA, 0x60)
+            analyze(0xA9, 0x00, 0xD0, 0x02, 0xEA, 0xEA, 0x4C, 0x04, 0x80)
         )
         assertTrue(output.success)
         assertTrue(output.source!!.contains("if (!state.zero) 0x8006 else 0x8004"))
@@ -57,6 +57,6 @@ class Nes6502StaticSourceEmitterTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun rejectsUnsafePackageNames() {
-        Nes6502StaticSourceEmitter.emit(analyze(0xEA, 0x60), "generated.cpu; malicious")
+        Nes6502StaticSourceEmitter.emit(analyze(0xEA, 0x4C, 0x00, 0x80), "generated.cpu; malicious")
     }
 }
