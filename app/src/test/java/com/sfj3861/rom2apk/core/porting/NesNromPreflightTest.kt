@@ -25,6 +25,14 @@ class NesNromPreflightTest {
     }
 
     @Test
+    fun reportsInstructionCountWhenStaticCpuSubsetCanBeEmitted() {
+        val result = NesNromPreflight.analyze(image(0xEA, 0x4C, 0x00, 0x80))
+        assertEquals(RomCheckStatus.VALIDATED, result.status)
+        assertTrue(result.details.contains("Instrucciones convertibles al subconjunto Kotlin estático: 2"))
+        assertTrue(result.details.contains("Esto no es un juego ejecutable"))
+    }
+
+    @Test
     fun doesNotClaimDynamicJumpCanBeTranslated() {
         val result = NesNromPreflight.analyze(image(0x6C, 0x00, 0x20))
         assertEquals(RomCheckStatus.NEEDS_SPECIAL_HANDLING, result.status)
