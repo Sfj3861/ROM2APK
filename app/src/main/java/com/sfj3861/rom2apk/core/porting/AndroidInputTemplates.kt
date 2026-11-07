@@ -237,7 +237,8 @@ internal object AndroidInputTemplates {
 
             override fun onCreate(savedInstanceState: Bundle?) {
                 super.onCreate(savedInstanceState)
-                val gameSession = GeneratedGameImplementation().createSession(this)
+                val gamePort: GeneratedGamePort = GeneratedGameImplementation()
+                val gameSession = gamePort.createSession(this)
                 session = gameSession
 
                 val root = FrameLayout(this)
