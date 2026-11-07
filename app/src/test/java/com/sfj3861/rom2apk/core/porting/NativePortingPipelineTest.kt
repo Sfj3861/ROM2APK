@@ -8,7 +8,8 @@ import org.junit.Test
 class NativePortingPipelineTest {
     private class FakeBackend(
         override val supportedFormats: Set<RomFormat> = setOf(RomFormat.GB),
-        private val canInspect: Boolean = true
+        private val canInspect: Boolean = true,
+        private val canTranslate: Boolean = true
     ) : NativePortBackend {
         override val id = "test-gb"
         override val displayName = "Test backend"
@@ -18,7 +19,7 @@ class NativePortingPipelineTest {
 
         override fun translate(input: ByteArray, request: PortRequest) =
             PortTranslation(
-                success = true,
+                success = canTranslate,
                 backendId = id,
                 gameTitle = "Test game",
                 sourceFiles = listOf(PortSourceFile(
@@ -58,6 +59,14 @@ class NativePortingPipelineTest {
         )
         assertTrue(result is PortingOutcome.Ready)
         assertEquals("test-gb", (result as PortingOutcome.Ready).translation.backendId)
+    }
+
+    @Test
+    fun reportsTranslationFailureInsteadOfReturningReady() {
+        val result = NativePortingPipeline(listOf(FakeBackend(canTranslate = false))).translate(
+            "game.gb", byteArrayOf(1), PortRequest("com.example.game", "Game")
+        )
+        assertTrue(result is PortingOutcome.TranslationFailed)
     }
 
     @Test(expected = IllegalArgumentException::class)
