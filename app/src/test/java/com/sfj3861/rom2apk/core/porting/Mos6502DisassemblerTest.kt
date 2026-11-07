@@ -7,6 +7,11 @@ import org.junit.Test
 
 class Mos6502DisassemblerTest {
     @Test
+    fun containsAll151OfficialNmos6502Opcodes() {
+        assertEquals(151, Mos6502Disassembler.supportedOpcodeCount)
+    }
+
+    @Test
     fun decodesImmediateAndAbsoluteInstructions() {
         val result = Mos6502Disassembler.disassemble(
             byteArrayOf(0xA9.toByte(), 0x42, 0x8D.toByte(), 0x00, 0x20),
