@@ -22,6 +22,11 @@ sealed interface PortingOutcome {
         val backendId: String,
         val inspection: PortInspection
     ) : PortingOutcome
+
+    data class TranslationFailed(
+        val backendId: String,
+        val diagnostics: List<String>
+    ) : PortingOutcome
 }
 
 /**
@@ -91,13 +96,14 @@ class NativePortingPipeline(backends: Collection<NativePortBackend>) {
         require(translation.gameTitle.isNotBlank()) {
             "El backend no identificó el título del juego."
         }
-        if (translation.success) {
-            require(translation.sourceFiles.isNotEmpty()) {
-                "El backend declaró éxito, pero no generó código fuente."
-            }
-            require(translation.sourceFiles.all { it.content.isNotBlank() }) {
-                "El backend generó un archivo de código vacío."
-            }
+        if (!translation.success) {
+            return PortingOutcome.TranslationFailed(backend.id, translation.diagnostics)
+        }
+        require(translation.sourceFiles.isNotEmpty()) {
+            "El backend declaró éxito, pero no generó código fuente."
+        }
+        require(translation.sourceFiles.all { it.content.isNotBlank() }) {
+            "El backend generó un archivo de código vacío."
         }
         return PortingOutcome.Ready(inspection, translation)
     }
