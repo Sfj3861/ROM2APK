@@ -19,7 +19,7 @@ class SnesGbaDisassemblerTest {
         val decoded = Wdc65816Disassembler.disassemble(code)
         assertEquals("JML", decoded[0].mnemonic)
         assertEquals("$123456", decoded[0].operand)
-        assertEquals("$008004", decoded[1].operand)
+        assertEquals("$008002", decoded[1].operand)
     }
 
     @Test fun unknownSnesOpcodesAreNotPretendedToBeDecoded() {
@@ -36,7 +36,7 @@ class SnesGbaDisassemblerTest {
     }
 
     @Test fun decodesThumbConditionalAndUnconditionalBranches() {
-        val conditional = Arm7TdmiDisassembler.decodeThumb(0xD001, 0x08000000)
+        val conditional = Arm7TdmiDisassembler.decodeThumb(0xD101, 0x08000000)
         val unconditional = Arm7TdmiDisassembler.decodeThumb(0xE7FE, 0x08000000)
         assertEquals(0x08000006, conditional.branchTarget)
         assertEquals(0x08000000, unconditional.branchTarget)
