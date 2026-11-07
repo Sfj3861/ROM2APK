@@ -7,8 +7,8 @@ class Nes6502StaticSourceEmitterTest {
     private fun analyze(vararg code: Int): NesNromCodeAnalyzer.Result {
         val prg = ByteArray(16_384) { 0xEA.toByte() }
         code.forEachIndexed { index, value -> prg[index] = value.toByte() }
-        prg[0x3FFC] = 0x00
-        prg[0x3FFD] = 0x80
+        prg[0x3FFC] = 0x00.toByte()
+        prg[0x3FFD] = 0x80.toByte()
         return NesNromCodeAnalyzer.analyze(prg)
     }
 
