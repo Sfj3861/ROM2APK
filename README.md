@@ -21,6 +21,7 @@ ROM2APK is an Android application project for packaging supported game files int
 - Conservative header/content checks for supported formats.
 - NES NROM (mapper 0) strict container parser for 16/32 KiB PRG, CHR-ROM/CHR-RAM, trainer and mirroring metadata.
 - NMOS 6502 decoder for the 151 documented opcodes, plus conservative reachable-code/control-flow discovery from the NROM RESET vector.
+- First static Kotlin source emitter for a deliberately limited 6502 subset: immediate/zero-page loads, zero-page stores, register transfers, increments/decrements, selected flag operations, conditional branches and absolute jumps. It emits direct register/memory operations and rejects unsupported instructions or incomplete control flow.
 - NES analysis UI uses that preflight and explicitly reports indirect jumps, unknown opcodes and unsupported mappers rather than claiming a native port exists.
 - Asynchronous analysis with validated, invalid, inconclusive, and special-handling outcomes.
 - Explicit distinction between 3DS cartridge images, 3DSX homebrew executables, and CIA packages.
@@ -30,7 +31,7 @@ ROM2APK is an Android application project for packaging supported game files int
 - Source-only Android project ZIP generator scaffold with backend/source-path validation; the original ROM is not copied into the generated project.
 - Generated project input scaffold: multi-touch on-screen D-pad, A/B/X/Y, L/R, Start/Select controls plus keyboard/gamepad shortcuts. Both feed one GameAction interface.
 - Owner-keystore signing script using Android apksigner; final in-app build/export orchestration is not yet implemented.
-- **No complete native game-port backend is implemented yet.** The NES NROM parser and 6502 control-flow analyzer are analysis foundations, not a recompilation engine; they do not implement PPU, APU, CPU timing, interrupts, DMA, mapper behavior or game rendering. The generated scaffold is not a playable game APK.
+- **No complete native game-port backend is implemented yet.** The CPU source emitter is an early static-recompilation component, not a full CPU implementation or game port. It does not yet implement arithmetic instructions, stack/subroutine semantics, full 6502 flags, PPU, APU, CPU timing, interrupts, DMA, mapper behavior, cartridge bus or game rendering. The generated Android scaffold is not a playable game APK.
 - Accessible labels, empty states, and a responsive single-screen layout.
 
 ## Build
@@ -52,11 +53,12 @@ utility app, **not** a playable game port.
 
 1. Android foundation and ROM import.
 2. Content inspection, checksums, format-specific validation, and diagnostics.
-3. Complete a NES NROM static recompilation backend, including 6502 semantics, native graphics/audio/input and equivalence tests.
-4. Validate a complete NROM title end-to-end before enabling APK export for that profile.
-5. Add further mappers and console families only when translated source reproduces behavior without an emulator runtime.
-6. Integrate project generation, build, signing and APK verification into the Android app using a user-owned keystore.
-7. Implement multi-game export, save data, per-game metadata, regression tests and real-device compatibility tests.
+3. Expand the 6502 source emitter with verified arithmetic, stack, addressing-mode and memory-bus semantics, with differential CPU tests.
+4. Implement NES PPU, APU, DMA, interrupts, timing and input as native platform components, then add end-to-end game equivalence tests.
+5. Validate a complete NROM title end-to-end before enabling APK export for that profile.
+6. Add further mappers and console families only when translated source reproduces behavior without an emulator runtime.
+7. Integrate project generation, build, signing and APK verification into the Android app using a user-owned keystore.
+8. Implement multi-game export, save data, per-game metadata, regression tests and real-device compatibility tests.
 
 ## Legal and security notes
 
