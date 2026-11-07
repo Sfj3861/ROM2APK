@@ -55,9 +55,18 @@ object NesNromCodeAnalyzer {
         while (pending.isNotEmpty() && visited.size < maxInstructions) {
             val address = pending.removeFirst()
             if (!visited.add(address)) continue
-            val offset = cpuToOffset(address) ?: continue
+            if (cpuToOffset(address) == null) continue
+            // Read through the NROM 16 KiB mirror boundary using CPU address mapping,
+            // rather than treating the physical PRG array end as an instruction boundary.
+            val instructionWindow = ByteArray(3)
+            var available = 0
+            while (available < instructionWindow.size) {
+                val mappedOffset = cpuToOffset((address + available) and 0xFFFF) ?: break
+                instructionWindow[available] = prgRom[mappedOffset]
+                available++
+            }
             val instruction = Mos6502Disassembler.disassemble(
-                prgRom.copyOfRange(offset, prgRom.size),
+                instructionWindow.copyOf(available),
                 startAddress = address,
                 maxInstructions = 1
             ).firstOrNull() ?: continue
