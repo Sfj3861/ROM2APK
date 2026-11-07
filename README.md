@@ -19,13 +19,16 @@ ROM2APK is an Android application project for packaging supported game files int
 - Android Storage Access Framework document picker (no broad storage permission).
 - Extension identification for the ten requested suffixes.
 - Conservative header/content checks for supported formats.
+- NES NROM (mapper 0) strict container parser for 16/32 KiB PRG, CHR-ROM/CHR-RAM, trainer and mirroring metadata.
+- NMOS 6502 decoder for the 151 documented opcodes, plus conservative reachable-code/control-flow discovery from the NROM RESET vector.
+- NES analysis UI uses that preflight and explicitly reports indirect jumps, unknown opcodes and unsupported mappers rather than claiming a native port exists.
 - Asynchronous analysis with validated, invalid, inconclusive, and special-handling outcomes.
 - Explicit distinction between 3DS cartridge images, 3DSX homebrew executables, and CIA packages.
 - Functional export-mode selection UI (standalone APK / multi-game library).
 - Source-only Android project ZIP generator scaffold with backend/source-path validation; the original ROM is not copied into the generated project.
 - Generated project input scaffold: multi-touch on-screen D-pad, A/B/X/Y, L/R, Start/Select controls plus keyboard/gamepad shortcuts. Both feed one GameAction interface.
 - Owner-keystore signing script using Android apksigner; final in-app build/export orchestration is not yet implemented.
-- A complete game-specific port backend is not yet implemented, so the generated project scaffold is not yet a playable game APK.
+- **No complete native game-port backend is implemented yet.** The NES NROM parser and 6502 control-flow analyzer are analysis foundations, not a recompilation engine; they do not implement PPU, APU, CPU timing, interrupts, DMA, mapper behavior or game rendering. The generated scaffold is not a playable game APK.
 - Accessible labels, empty states, and a responsive single-screen layout.
 
 ## Build
@@ -43,11 +46,11 @@ The first build requires network access to resolve Gradle and Maven dependencies
 
 1. Android foundation and ROM import.
 2. Content inspection, checksums, format-specific validation, and diagnostics.
-3. Native port backend architecture, source translation and equivalence tests per console family.
-4. Implement and validate the first complete native port backend (start with a tractable 8-bit system).
-5. Add further system backends only when translated source can reproduce game behavior without an emulator runtime.
-6. Compile generated projects, sign with a keystore controlled by the user, and verify APK signatures.
-7. Integrate build/export into the app; add multi-game export, regression tests and real-device compatibility tests.
+3. Complete a NES NROM static recompilation backend, including 6502 semantics, native graphics/audio/input and equivalence tests.
+4. Validate a complete NROM title end-to-end before enabling APK export for that profile.
+5. Add further mappers and console families only when translated source reproduces behavior without an emulator runtime.
+6. Integrate project generation, build, signing and APK verification into the Android app using a user-owned keystore.
+7. Implement multi-game export, save data, per-game metadata, regression tests and real-device compatibility tests.
 
 ## Legal and security notes
 
