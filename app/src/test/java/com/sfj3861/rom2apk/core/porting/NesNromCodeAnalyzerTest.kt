@@ -7,8 +7,8 @@ class NesNromCodeAnalyzerTest {
     private fun prgWithReset(vararg code: Int): ByteArray =
         ByteArray(16_384) { 0xEA.toByte() }.also { prg ->
             code.forEachIndexed { index, value -> prg[index] = value.toByte() }
-            prg[0x3FFC] = 0x00
-            prg[0x3FFD] = 0x80
+            prg[0x3FFC] = 0x00.toByte()
+            prg[0x3FFD] = 0x80.toByte()
         }
 
     @Test
