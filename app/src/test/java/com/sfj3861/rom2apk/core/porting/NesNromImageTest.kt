@@ -16,8 +16,8 @@ class NesNromImageTest {
     fun parsesNromWithChrRamAndResetVector() {
         val bytes = rom()
         val prg = 16
-        bytes[prg + 0x3FFC] = 0x00
-        bytes[prg + 0x3FFD] = 0x80
+        bytes[prg + 0x3FFC] = 0x00.toByte()
+        bytes[prg + 0x3FFD] = 0x80.toByte()
         val result = NesNromImage.parse(bytes)
         assertTrue(result is NesNromImage.Result.Supported)
         val image = (result as NesNromImage.Result.Supported).image
