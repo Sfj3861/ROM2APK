@@ -30,13 +30,18 @@ def safe_extract(archive: pathlib.Path, destination: pathlib.Path) -> None:
             raise ValueError("El proyecto supera el límite de extracción de 512 MiB.")
         seen: set[str] = set()
         for entry in entries:
-            name = entry.filename.replace("\\", "/")
+            name = entry.filename
+            if "\\\\" in name or "\\x00" in name:
+                raise ValueError(f"Ruta insegura en ZIP: {entry.filename}")
             path = pathlib.PurePosixPath(name)
             if path.is_absolute() or not path.parts or any(p in ("", ".", "..") for p in path.parts):
                 raise ValueError(f"Ruta insegura en ZIP: {entry.filename}")
-            if name in seen:
-                raise ValueError(f"Entrada duplicada en ZIP: {name}")
-            seen.add(name)
+            if ":" in path.parts[0] or path.as_posix() + ("/" if entry.is_dir() else "") != name:
+                raise ValueError(f"Ruta no canónica en ZIP: {entry.filename}")
+            canonical_target = path.as_posix()
+            if canonical_target in seen:
+                raise ValueError(f"Entrada duplicada o colisión de ruta en ZIP: {name}")
+            seen.add(canonical_target)
             # Reject Unix symlinks; generated projects only need regular files/directories.
             mode = (entry.external_attr >> 16) & 0o170000
             if mode == 0o120000:
@@ -119,10 +124,21 @@ def main() -> int:
             raise RuntimeError("Gradle terminó sin producir app-release-unsigned.apk.")
 
         sdk_path = pathlib.Path(sdk)
-        signers = sorted(sdk_path.glob("build-tools/*/apksigner"), key=lambda p: tuple(int(x) for x in p.parent.name.split(".") if x.isdigit()))
-        if not signers:
-            raise RuntimeError("No se encontró apksigner en Android SDK build-tools.")
-        apksigner = str(signers[-1])
+        build_tools = sorted(
+            (p for p in (sdk_path / "build-tools").iterdir() if p.is_dir()),
+            key=lambda p: tuple(int(x) for x in p.name.split(".") if x.isdigit()),
+        ) if (sdk_path / "build-tools").is_dir() else []
+        tools_dir = next(
+            (directory for directory in reversed(build_tools)
+             if (directory / "apksigner").is_file() and (directory / "zipalign").is_file()),
+            None,
+        )
+        if tools_dir is None:
+            raise RuntimeError("No se encontraron apksigner y zipalign en Android SDK build-tools.")
+        apksigner = str(tools_dir / "apksigner")
+        zipalign = str(tools_dir / "zipalign")
+        aligned = project / "app" / "build" / "outputs" / "apk" / "release" / "app-release-aligned.apk"
+        run([zipalign, "-f", "-p", "4", str(unsigned), str(aligned)])
         output = args.output.resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         run([
@@ -130,9 +146,10 @@ def main() -> int:
             "--ks-key-alias", alias,
             "--ks-pass", "env:ROM2APK_STORE_PASSWORD",
             "--key-pass", "env:ROM2APK_KEY_PASSWORD",
-            "--out", str(output), str(unsigned),
+            "--out", str(output), str(aligned),
         ])
         run([apksigner, "verify", "--verbose", "--print-certs", str(output)])
+        run([zipalign, "-c", "-v", "4", str(output)])
         print(f"APK firmado y verificado: {output}")
         return 0
     finally:
