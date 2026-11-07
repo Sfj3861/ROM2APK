@@ -25,6 +25,8 @@ ROM2APK is an Android application project for packaging supported game files int
 - Asynchronous analysis with validated, invalid, inconclusive, and special-handling outcomes.
 - Explicit distinction between 3DS cartridge images, 3DSX homebrew executables, and CIA packages.
 - Functional export-mode selection UI (standalone APK / multi-game library).
+- Local ROM library with persistent document references and open/remove actions.
+- In-app project information dialog that clearly explains current backend and APK-export limitations.
 - Source-only Android project ZIP generator scaffold with backend/source-path validation; the original ROM is not copied into the generated project.
 - Generated project input scaffold: multi-touch on-screen D-pad, A/B/X/Y, L/R, Start/Select controls plus keyboard/gamepad shortcuts. Both feed one GameAction interface.
 - Owner-keystore signing script using Android apksigner; final in-app build/export orchestration is not yet implemented.
