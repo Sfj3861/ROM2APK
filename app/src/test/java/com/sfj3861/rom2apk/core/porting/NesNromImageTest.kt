@@ -52,8 +52,11 @@ class NesNromImageTest {
 
     @Test
     fun detectsTrainerAndExtractsPayloadAtCorrectOffset() {
-        val bytes = rom(flags6 = 0x04)
+        val base = rom(flags6 = 0x04)
+        val bytes = ByteArray(base.size + 512)
+        base.copyOfRange(0, 16).copyInto(bytes)
         bytes[16] = 0x55
+        base.copyOfRange(16, base.size).copyInto(bytes, 16 + 512)
         val result = NesNromImage.parse(bytes) as NesNromImage.Result.Supported
         assertEquals(512, result.image.trainer?.size)
         assertEquals(0x55, result.image.trainer!![0].toInt() and 0xFF)
