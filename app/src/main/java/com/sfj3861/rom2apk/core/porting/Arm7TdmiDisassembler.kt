@@ -81,7 +81,6 @@ object Arm7TdmiDisassembler {
                 target = address + 4 + (signed shl 1)
             }
             (h and 0xF800) == 0x4800 -> { kind = Kind.LITERAL_LOAD; mnemonic = "LDR" }
-            (h and 0xF000) == 0x2000 -> { kind = Kind.DATA_PROCESSING; mnemonic = "MOV" }
             (h and 0xF800) == 0x1800 -> { kind = Kind.DATA_PROCESSING; mnemonic = "ADD/SUB" }
             (h and 0xF800) == 0x2000 -> { kind = Kind.DATA_PROCESSING; mnemonic = "MOV" }
             (h and 0xF800) == 0x2800 -> { kind = Kind.DATA_PROCESSING; mnemonic = "CMP" }
