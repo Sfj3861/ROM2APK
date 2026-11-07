@@ -89,7 +89,19 @@ object NesNromCodeAnalyzer {
                     enqueue(target, "JSR")
                     enqueue(next, "Retorno potencial de JSR")
                 }
-                instruction.mnemonic in setOf("RTS", "RTI", "BRK") -> Unit
+                instruction.mnemonic == "RTS" -> Unit
+                instruction.mnemonic == "BRK" -> {
+                    val vectorOffset = cpuToOffset(0xFFFE)!!
+                    val target = (prgRom[vectorOffset].toInt() and 0xFF) or
+                        ((prgRom[vectorOffset + 1].toInt() and 0xFF) shl 8)
+                    diagnostics += "BRK en ${hex(address)}: la ejecución por interrupciones no está modelada."
+                    complete = false
+                    enqueue(target, "Vector IRQ/BRK")
+                }
+                instruction.mnemonic == "RTI" -> {
+                    diagnostics += "RTI en ${hex(address)}: retorno de interrupción dependiente de la pila."
+                    complete = false
+                }
                 else -> enqueue(next, "Flujo secuencial")
             }
         }
