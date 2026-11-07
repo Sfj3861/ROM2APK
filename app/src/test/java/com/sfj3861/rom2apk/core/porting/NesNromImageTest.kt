@@ -27,6 +27,17 @@ class NesNromImageTest {
     }
 
     @Test
+    fun parsesThirtyTwoKiBPrgAndEightKiBChrRom() {
+        val result = NesNromImage.parse(rom(prgBanks = 2, chrBanks = 1, flags6 = 0x01))
+        assertTrue(result is NesNromImage.Result.Supported)
+        val image = (result as NesNromImage.Result.Supported).image
+        assertEquals(32_768, image.prgRom.size)
+        assertEquals(8_192, image.chrRom.size)
+        assertFalse(image.hasChrRam)
+        assertEquals(NesNromImage.Mirroring.VERTICAL, image.mirroring)
+    }
+
+    @Test
     fun rejectsTruncatedAndUnsupportedMapperImages() {
         val truncated = rom().copyOf(100)
         assertTrue(NesNromImage.parse(truncated) is NesNromImage.Result.Invalid)
